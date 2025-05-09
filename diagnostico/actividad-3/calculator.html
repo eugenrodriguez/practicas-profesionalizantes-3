@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport">
+    <title>Calculadora</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            text-align: center;
+            margin: 0;
+        }
+
+        table {
+            padding: 15px;
+            width: 400px;
+            height: 600px;
+            border-spacing: 15px;
+            border: solid blue 7px;
+            border-radius: 30px;
+            box-shadow: 8px 8px 15px blue;
+        }
+
+        .boton {
+            border-radius: 15px;
+            width: 70px;
+            height: 70px;
+            border: none;
+            color: white;
+            font-size: 20px;
+        }
+
+        .azul {
+            background-color: rgb(41, 109, 255);
+            box-shadow: 0px 8px 0px blue;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .verde {
+            background-color: rgb(33, 255, 33);
+            box-shadow: 0px 8px 0px rgb(27, 198, 27);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .amarillo {
+            background-color: rgb(255, 255, 41);
+            box-shadow: 0px 8px 0px rgb(191, 191, 0);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .visor-numeros {
+            width: 100%;
+            border: solid black 1px;
+            text-align: right;
+            height: 70px;
+            border-radius: 8px;
+            box-shadow: inset 3px 4px 4px grey;
+            font-size: 30px;
+        }
+
+        .borrar {
+            width: 100%;
+            background-color: rgb(251, 42, 42);
+            height: 70px;
+            border-radius: 15px;
+            box-shadow: 0px 8px 0px rgb(173, 0, 0);
+            border: none;
+        }
+
+        button:hover {
+            cursor: pointer;
+        }
+
+        .azul:hover {
+            box-shadow: 0px 5px 0px blue;
+        }
+
+        .verde:hover {
+            box-shadow: 0px 5px 0px rgb(27, 198, 27);
+        }
+
+        .amarillo:hover {
+            box-shadow: 0px 5px 0px rgb(191, 191, 0);
+        }
+
+        .borrar:hover {
+            box-shadow: 0px 5px 0px rgb(173, 0, 0);
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <td colspan="4"><input id="visor" class="visor-numeros" type="text" readonly /></td>
+        </tr>
+        <tr>
+            <td><button id="boton7" class="boton azul">7</button></td>
+            <td><button id="boton8" class="boton azul">8</button></td>
+            <td><button id="boton9" class="boton azul">9</button></td>
+            <td><button id="botonSuma" class="boton verde">+</button></td>
+        </tr>
+        <tr>
+            <td><button id="boton4" class="boton azul">4</button></td>
+            <td><button id="boton5" class="boton azul">5</button></td>
+            <td><button id="boton6" class="boton azul">6</button></td>
+            <td><button id="botonResta" class="boton verde">-</button></td>
+        </tr>
+        <tr>
+            <td><button id="boton1" class="boton azul">1</button></td>
+            <td><button id="boton2" class="boton azul">2</button></td>
+            <td><button id="boton3" class="boton azul">3</button></td>
+            <td><button id="botonMultiplicacion" class="boton verde">*</button></td>
+        </tr>
+        <tr>
+            <td><button id="boton0" class="boton azul">0</button></td>
+            <td><button id="botonPunto" class="boton azul">.</button></td>
+            <td><button id="botonIgual" class="boton amarillo">=</button></td>
+            <td><button id="botonDivicion" class="boton verde">/</button></td>
+        </tr>
+        <tr>
+            <td colspan="4"><button id="botonBorrar" class="boton borrar">Borrar</button></td>
+        </tr>
+    </table>
+
+    <script>
+        const display = document.getElementById("visor");
+
+        function agregarAlVisor(value) {
+            visor.value += value;
+        }
+
+        function borrar() {
+            visor.value = "";
+        }
+
+        function calcularResultado() {
+            try {
+                visor.value = eval(visor.value);
+            } catch (e) {
+                visor.value = "Error";
+            }
+        }
+
+        document.getElementById("boton0").onclick = () => agregarAlVisor("0");
+        document.getElementById("boton1").onclick = () => agregarAlVisor("1");
+        document.getElementById("boton2").onclick = () => agregarAlVisor("2");
+        document.getElementById("boton3").onclick = () => agregarAlVisor("3");
+        document.getElementById("boton4").onclick = () => agregarAlVisor("4");
+        document.getElementById("boton5").onclick = () => agregarAlVisor("5");
+        document.getElementById("boton6").onclick = () => agregarAlVisor("6");
+        document.getElementById("boton7").onclick = () => agregarAlVisor("7");
+        document.getElementById("boton8").onclick = () => agregarAlVisor("8");
+        document.getElementById("boton9").onclick = () => agregarAlVisor("9");
+        document.getElementById("botonPunto").onclick = () => agregarAlVisor(".");
+        document.getElementById("botonSuma").onclick = () => agregarAlVisor("+");
+        document.getElementById("botonResta").onclick = () => agregarAlVisor("-");
+        document.getElementById("botonMultiplicacion").onclick = () => agregarAlVisor("*");
+        document.getElementById("botonDivicion").onclick = () => agregarAlVisor("/");
+        document.getElementById("botonBorrar").onclick = borrar;
+        document.getElementById("botonIgual").onclick = calcularResultado;
+    </script>
+</body>
+
+</html>
