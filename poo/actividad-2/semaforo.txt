@@ -1,0 +1,34 @@
+Objeto: Semaforo
+
+Propiedades/Atributos:
+
+Nombre       | Tipo de dato   |  Constante/Variable   |  Rango de valores posibles  |  f(c)
+luzRoja      | bool           |  Variable              |     true/false             |  ejecutarEstado()  
+luzAmarilla  | bool           |  Variable              |     true/false             |  ejecutarEstado()  
+luzVerde     | bool           |  Variable              |     true/false             |  ejecutarEstado()  
+cicloDeLuces | int            |  variable              |                            |  encenderSemaforo()
+estadoActual | int            |  Variable              |     (0, 1, 2, 4)           |  ejecutarEstado()  
+
+Refactoring 1: Las funciones no tienen retorno ni parametros de entrada.  
+Refactoring 2: Se agrego estadoActual para las luces y ciclo de encendido y apagado de las mimas. El ciclo es parte escencial del semaforo.      
+Refactoring 3: Se eliminaron las funciones de encendido y apagado de luces y se arego funcion ejecutarEstado con un switch que cambia los estadosActuales segun cada case.   
+Refactoring 4: Se agrego un 4 estado para las luces, de esta manera dese del verde vuelve al amarillo y comienza nuevamente el ciclo.
+
+
+Comportamientos:
+
+Nombre              |  Parametros/Tipo  | Retorno
+encenderSemaforo         -----              ---- 
+apagarSemaforo           -----              ----
+ejecutarEstado      |    -----              ----
+
+Eliminado / Revision:
+encenderLuzRoja          bool              bool
+apagarLuzRoja            bool              bool
+encenderLuzAmarilla      bool              bool
+apagarLuzAmarilla        bool              bool
+encenderLuzVerde         bool              bool
+apagarLuzVerde           bool              bool    
+
+
+

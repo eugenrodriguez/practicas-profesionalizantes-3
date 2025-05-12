@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Semáforo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .semaforo {
+      width: 100px;
+      background: #333;
+      padding: 20px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .luz {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #111;
+      opacity: 0.3;
+      transition: all 0.3s;
+    }
+
+    .roja.encendida { background-color: red; opacity: 1; }
+    .amarilla.encendida { background-color: yellow; opacity: 1; }
+    .verde.encendida { background-color: green; opacity: 1; }
+
+    .controles {
+      margin-top: 30px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #555;
+      color: white;
+    }
+
+    button:hover {
+      background-color: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Semáforo</h1>
+
+  <div class="semaforo">
+    <div id="luzRoja" class="luz roja"></div>
+    <div id="luzAmarilla" class="luz amarilla"></div>
+    <div id="luzVerde" class="luz verde"></div>
+  </div>
+
+  <div class="controles">
+    <button id="btnEncender">Encender Semáforo</button>
+    <button id="btnApagar">Apagar Semáforo</button>
+  </div>
+
+
+
+<script>
+  class Semaforo {
+    constructor() {
+      this._luzRoja = false;
+      this._luzAmarilla = false;
+      this._luzVerde = false;
+      this._ciclo = null;
+      this._estadoActual = 0;
+    }
+
+    set luzRoja(valor) {
+      this._luzRoja = valor;
+      document.getElementById("luzRoja").classList.toggle("encendida", valor);
+    }
+
+    get luzRoja() {
+      return this._luzRoja;
+    }
+
+    set luzAmarilla(valor) {
+      this._luzAmarilla = valor;
+      document.getElementById("luzAmarilla").classList.toggle("encendida", valor);
+    }
+
+    get luzAmarilla() {
+      return this._luzAmarilla;
+    }
+
+    set luzVerde(valor) {
+      this._luzVerde = valor;
+      document.getElementById("luzVerde").classList.toggle("encendida", valor);
+    }
+
+    get luzVerde() {
+      return this._luzVerde;
+    }
+
+    encenderSemaforo() {
+      if (this._ciclo) 
+      {
+        return
+      }
+
+      this._estadoActual = 0;
+      this.ejecutarEstado();
+
+      this._ciclo = setInterval(() => {
+        this._estadoActual = (this._estadoActual + 1) % 4;
+        this.ejecutarEstado();
+      }, 2000);
+    }
+
+    apagarSemaforo() {
+      clearInterval(this._ciclo);
+      this._ciclo = null;
+      this.luzRoja = false;
+      this.luzAmarilla = false;
+      this.luzVerde = false;
+    }
+
+    ejecutarEstado() {
+      switch (this._estadoActual) {
+        case 0:
+          this.luzRoja = true;
+          this.luzAmarilla = false;
+          this.luzVerde = false;
+          break;
+        case 1:
+          this.luzRoja = false;
+          this.luzAmarilla = true;
+          this.luzVerde = false;
+          break;
+        case 2:
+          this.luzRoja = false;
+          this.luzAmarilla = false;
+          this.luzVerde = true;
+          break;
+        case 3:
+          this.luzRoja = false;
+          this.luzAmarilla = true;
+          this.luzVerde = false;
+          break;
+      }
+    }
+  }
+
+  const semaforo = new Semaforo();
+
+      
+
+  function onEncenderClick() {
+    semaforo.encenderSemaforo();
+  }
+
+  function onApagarClick() {
+    semaforo.apagarSemaforo();
+  }
+
+  let btnEncender = document.getElementById("btnEncender");
+  btnEncender.onclick = onEncenderClick;
+
+  let btnApagar = document.getElementById("btnApagar");
+  btnApagar.onclick = onApagarClick;
+
+</script>
+
+
+</body>
+</html>

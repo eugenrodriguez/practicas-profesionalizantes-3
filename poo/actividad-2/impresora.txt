@@ -1,0 +1,5 @@
+Objeto: Impresora
+
+Propiedades/Atributos:
+
+Nombre    | Tipo de dato   |  Constante/Variable   |  Rango de valores posibles  |  f(c)
