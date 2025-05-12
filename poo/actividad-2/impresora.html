@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Impresora</title>
+  <style>
+    table, td, tr {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+  </style>
+</head>
+<body>
+
+<h3>Objeto: Impresora</h3>
+
+<table>
+  <tr>
+    <td>Estado</td>
+    <td><input id="estado" type="text" readonly></td>
+  </tr>
+  <tr>
+    <td>Nivel de Tóner</td>
+    <td><progress id="nivelToner" max="100" value="100">100%</progress></td>
+  </tr>
+  <tr>
+    <td>Hojas en Bandeja</td>
+    <td><input id="hojasEnBandeja" type="text" readonly></td>
+  </tr>
+  <tr>
+    <td>Capacidad de Hojas</td>
+    <td><input id="capacidadHojas" type="text" readonly></td>
+  </tr>
+</table>
+
+<button id="btnEncender">Encender</button>
+<button id="btnApagar">Apagar</button>
+<button id="btnImprimir">Imprimir</button>
+<button id="btnCargarPapel">Cargar Papel</button>
+<button id="btnCambiarToner">Cambiar Tóner</button>
+
+<script>
+
+function getimpresoraProperties(impresora) {
+    return {
+        estado: impresora.estado,
+        nivelToner: impresora.nivelToner,
+        hojasEnBandeja: impresora.hojasEnBandeja,
+        capacidadHojas: impresora.capacidadHojas
+    };
+}
+
+function updateGUI(impresoraData) {
+    const estado = document.getElementById("estado");
+    const nivelToner = document.getElementById("nivelToner");
+    const hojas = document.getElementById("hojasEnBandeja");
+    const capacidad = document.getElementById("capacidadHojas");
+
+    estado.value = impresoraData.estado;
+    nivelToner.value = impresoraData.nivelToner;
+    nivelToner.innerText = impresoraData.nivelToner + "%";
+    hojas.value = impresoraData.hojasEnBandeja;
+    capacidad.value = impresoraData.capacidadHojas;
+}
+
+function initGUI(impresora) {
+    const btnEncender = document.getElementById("btnEncender");
+    const btnApagar = document.getElementById("btnApagar");
+    const btnImprimir = document.getElementById("btnImprimir");
+    const btnCargarPapel = document.getElementById("btnCargarPapel");
+    const btnCambiarToner = document.getElementById("btnCambiarToner");
+
+    btnEncender.onclick = () => {
+        impresora.encender();
+        updateGUI(getimpresoraProperties(impresora));
+    };
+
+    btnApagar.onclick = () => {
+        impresora.apagar();
+        updateGUI(getimpresoraProperties(impresora));
+    };
+
+    btnImprimir.onclick = () => {
+        impresora.imprimir();
+        updateGUI(getimpresoraProperties(impresora));
+    };
+
+    btnCargarPapel.onclick = () => {
+        const cantidad = parseInt(prompt("¿Cuántas hojas querés cargar?"));
+        if (!isNaN(cantidad) && cantidad > 0) {
+            impresora.cargarPapel(cantidad);
+            updateGUI(getimpresoraProperties(impresora));
+        } else {
+            alert("Ingrese una cantidad válida.");
+        }
+    };
+
+    btnCambiarToner.onclick = () => {
+        impresora.cambiarToner();
+        updateGUI(getimpresoraProperties(impresora));
+    };
+
+    updateGUI(getimpresoraProperties(impresora));
+}
+
+  class Impresora {
+    constructor() {
+      this._estadoEncendido = false;
+      this._nivelToner = 100;
+      this._capacidadHojas = 100;
+      this._cantidadHojasEnBandeja = 0;
+    }
+
+    get estado() {
+      return this._estadoEncendido ? "Encendida" : "Apagada";
+    }
+
+    get nivelToner() {
+      return this._nivelToner;
+    }
+
+    get hojasEnBandeja() {
+      return this._cantidadHojasEnBandeja;
+    }
+
+    get capacidadHojas() {
+      return this._capacidadHojas;
+    }
+
+    encender() {
+      this._estadoEncendido = true;
+    }
+
+    apagar() {
+      this._estadoEncendido = false;
+    }
+
+    cargarPapel(cantidad) {
+      if (this._cantidadHojasEnBandeja + cantidad <= this._capacidadHojas) {
+        this._cantidadHojasEnBandeja += cantidad;
+      } else {
+        alert("Supera la capacidad de la bandeja.");
+      }
+    }
+
+    imprimir() {
+      if (!this._estadoEncendido) {
+        alert("La impresora está apagada.");
+        return;
+      }
+      if (this._nivelToner <= 0) {
+        alert("No hay suficiente tóner.");
+        return;
+      }
+      if (this._cantidadHojasEnBandeja <= 0) {
+        alert("No hay hojas en la bandeja.");
+        return;
+      }
+      this._cantidadHojasEnBandeja--;
+      this._nivelToner -= 10;
+      if (this._nivelToner < 0) this._nivelToner = 0;
+    }
+
+    cambiarToner() {
+      this._nivelToner = 100;
+    }
+  }
+
+  let impresora = new Impresora();
+  initGUI(impresora);
+
+
+</script>
+
+</body>
+</html>
