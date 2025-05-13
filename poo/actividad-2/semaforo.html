@@ -170,9 +170,10 @@ class Semaforo {
     actualizarVista(this);
   }
 }
-  const semaforo = new Semaforo();
 
-      
+function main()
+{
+  let semaforo = new Semaforo();
 
   function onEncenderClick() {
     semaforo.encenderSemaforo();
@@ -187,6 +188,10 @@ class Semaforo {
 
   let btnApagar = document.getElementById("btnApagar");
   btnApagar.onclick = onApagarClick;
+
+}
+ 
+window.onload = main;
 
 </script>
 

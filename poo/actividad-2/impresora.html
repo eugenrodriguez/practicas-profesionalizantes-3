@@ -166,8 +166,13 @@ function initGUI(impresora) {
     }
   }
 
-  let impresora = new Impresora();
-  initGUI(impresora);
+  function main()
+  {
+      let impresora = new Impresora();
+      initGUI(impresora);
+  }
+
+  window.onload = main;
 
 
 </script>
