@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas Rectángulo</title>
+</head>
+
+<style>
+    body 
+    {
+      background: linear-gradient(#00fff7, #81fddc);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
+    }
+
+    canvas
+    {
+        background-color: rgb(127, 255, 251);
+        border: 4px solid black;
+        border-radius: 40px;
+        box-shadow:  10px 10px 5px inset rgba(0, 0, 0, 0.4);
+    }
+
+</style>
+
+
+
+<body>
+    <canvas id="canvas" width="1000" height="500"></canvas>
+</body>
+
+<script type="text/javascript">
+
+    class Rectangle
+    {
+        constructor(ctx, canvasWidth, canvasHeight)
+        {
+            this.ctx = ctx;
+            this.canvasWidth = canvasWidth;
+            this.canvasHeight = canvasHeight;
+            this.rect = {
+                x: canvasWidth / 2,
+                y: canvasHeight / 2,
+                width: 100,
+                height: 50,
+                angle: 0
+            };
+        }
+
+
+        clearCanvas()
+        {
+            this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        drawTrail() {
+        this.ctx.save();
+        this.ctx.translate(this.rect.x, this.rect.y);
+        this.ctx.rotate(this.rect.angle);
+
+        this.ctx.fillStyle = 'rgba(139, 69, 19, 0.4)'; // tierra/marrón translúcido
+
+        // Banda de huella más angosta que el rectángulo
+        const trailWidth = this.rect.width * 0.6;
+        const trailHeight = 6;
+
+        this.ctx.fillRect(-trailWidth / 2, -trailHeight / 2, trailWidth, trailHeight);
+
+        this.ctx.restore();
+      }
+
+        drawRectangle()
+        {
+            this.clearCanvas();
+            this.ctx.save();
+            this.ctx.translate(this.rect.x, this.rect.y);
+            this.ctx.rotate(this.rect.angle);
+            this.ctx.fillStyle = 'blue';
+            this.ctx.fillRect(-this.rect.width / 2, -this.rect.height / 2, this.rect.width, this.rect.height);
+            this.ctx.restore();
+        }
+
+        rotateRect(radians)
+        {
+            this.rect.angle += radians;
+            this.drawRectangle();
+        }
+
+        moveInDirection(distance) {
+            // Determina si el lado más largo es horizontal o vertical
+            const isWidthLonger = this.rect.width >= this.rect.height;
+            const angle = this.rect.angle;
+
+            // Si el lado largo es el ancho, se mueve según el ángulo directamente
+            // Si el lado largo es el alto, se le suma 90° (pi/2)
+            const directionAngle = isWidthLonger ? angle : angle + Math.PI / 2;
+
+            const dx = Math.cos(directionAngle) * distance;
+            const dy = Math.sin(directionAngle) * distance;
+
+            this.rect.x += dx;
+            this.rect.y += dy;
+
+            this.drawRectangle();
+        }
+
+        
+    }
+
+    /*class RectangleController {
+        constructor(rectangle) {
+            this.rectangle = rectangle;
+            this.setupKeyboardControls();
+            this.animate();
+        }
+
+        setupKeyboardControls() {
+            document.addEventListener('keydown', (event) => {
+                const rotateStep = Math.PI / 60;
+                const step = 1; 
+
+                switch (event.key) {
+                    case 'ArrowUp':
+                        this.rectangle.moveInDirection(step);
+                        break;
+                    case 'ArrowDown':
+                        this.rectangle.moveInDirection(-step);
+                        break;
+                    case 'ArrowLeft':
+                        this.rectangle.rotateRect(-rotateStep);
+                        break;
+                    case 'ArrowRight':
+                        this.rectangle.rotateRect(rotateStep);
+                        break;
+                }
+            });
+        }
+    }*/
+
+     class RectangleController {
+        constructor(rectangle) {
+            this.rectangle = rectangle;
+            this.keys = {};
+            this.movementSpeed = 2;
+            this.rotationSpeed = Math.PI / 70;
+            this.setupKeyboardControls();
+            this.animate();
+        }
+
+        setupKeyboardControls() {
+            document.addEventListener('keydown', (event) => {
+                this.keys[event.key] = true;
+            });
+
+            document.addEventListener('keyup', (event) => {
+                this.keys[event.key] = false;
+            });
+        }
+
+        animate() {
+            if (this.keys['ArrowUp']) {
+                this.rectangle.moveInDirection(this.movementSpeed);
+            }
+            if (this.keys['ArrowDown']) {
+                this.rectangle.moveInDirection(-this.movementSpeed);
+            }
+            if (this.keys['ArrowLeft']) {
+                this.rectangle.rotateRect(-this.rotationSpeed);
+            }
+            if (this.keys['ArrowRight']) {
+                this.rectangle.rotateRect(this.rotationSpeed);
+            }
+
+            this.rectangle.drawRectangle();
+            requestAnimationFrame(() => this.animate());
+        }
+    }
+    
+
+function main()
+{
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");
+    let rectangle = new Rectangle(ctx, canvas.width, canvas.height);
+
+    rectangle.drawRectangle();
+
+    new RectangleController(rectangle);
+
+
+    /*function animate()
+    {
+        rectangle.update();
+        
+        requestAnimationFrame(animate);
+    }*/
+
+    //animate();
+
+
+}
+
+window.onload = main;
+
+</script>
+</html>
