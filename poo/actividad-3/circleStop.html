@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Semaforo</title>
+</head>
+
+<style type="text/css">
+
+body
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+canvas {
+    border: 1px solid black;
+    margin-top: 20px;
+    border-radius: 30px;
+}
+
+.luzroja
+{
+    background-color: red;
+    color: white;
+}
+
+.luzamarilla
+{
+    background-color: yellow;
+    color: white;
+}
+
+.luzverde
+{
+    background-color: rgb(0, 255, 0);
+    color: white;
+}
+
+.luzapagada
+{
+    background-color: white;
+    color: black;
+}
+
+.controles {
+    margin-top: 30px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.controles button
+{
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #555;
+    color: white;
+}
+
+.semaphore-container
+{
+    width: 100px;
+    background: #333;
+    padding: 20px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.semaphore-container button
+{
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      opacity: 1;
+      transition: all 0.3s;
+      border-top: 10px solid black;
+}
+
+
+</style>
+
+<body>
+    <div class="semaphore-container">
+        <button id="red"></button>
+        <button id="yellow"></button>
+        <button id="green"></button>
+    </div>
+
+    <div class="controles">
+        <button id="on">Encender</button>
+        <button id="off">Apagar</button>
+    </div>
+
+    <canvas id="canvas" width="600" height="200"></canvas>
+</body>
+
+
+<script type="text/javascript">
+
+    class Circle 
+    {
+        constructor(ctx, width) {
+            this.ctx = ctx;
+            this.x = 0;
+            this.y = 100;
+            this.radius = 40;
+            this.speed = 5;
+            this.canvasWidth = width;
+            this.running = false;
+        }
+
+        update() {
+            if (this.running) {
+                this.x += this.speed;
+                if (this.x > this.canvasWidth + this.radius) {
+                    this.x = -this.radius; 
+                }
+            }
+        }
+
+        draw() {
+            this.ctx.clearRect(0, 0, this.canvasWidth, 200);
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            this.ctx.fillStyle = "blue";
+            this.ctx.fill();
+            this.ctx.closePath();
+        }
+    }
+
+    class SemaphoreView
+    {
+        constructor(model)
+        {
+            this._model = model;
+
+            this._model.addEventListener('changed', ()=> this.updateView()) 
+
+            this.updateView();
+
+        }
+
+        updateView()
+        {
+            let state = this._model.getModelState();
+
+            document.getElementById('red').style.backgroundColor = 'white';
+            document.getElementById('yellow').style.backgroundColor = 'white';
+            document.getElementById('green').style.backgroundColor = 'white';
+
+            if (circle) 
+            {
+                circle.running = state.green;
+            }
+
+            if (state.red)
+            {
+                document.getElementById('red').style.backgroundColor = 'red';
+            }
+ 
+            if (state.yellow)
+            {
+                document.getElementById('yellow').style.backgroundColor = 'yellow';
+            }
+
+            if (state.green)
+            {
+                document.getElementById('green').style.backgroundColor = 'green';
+            }
+
+            console.log(state);
+        }
+
+    }
+
+    class SemaphoreModel extends EventTarget
+    {
+        constructor()
+        {
+            super();
+
+            this.timer = 0; 
+
+            this.redTime = 5;
+            this.transitionTime = 1; 
+            this.greenTime = 3;
+
+            this.redLightState = null;
+            this.yellowLightState = null;
+            this.greenLightState = null;
+
+            this.isRunning = false;
+
+            this.setShutdownState();
+        }
+
+        getModelState()
+        {
+            let state = 
+            {
+                red: this.redLightState,
+                yellow: this.yellowLightState,
+                green: this.greenLightState
+            }
+
+            return state;
+        }
+
+        setShutdownState()
+        {
+            this.redLightState = false;
+            this.yellowLightState = false;
+            this.greenLightState = false;
+
+            this.dispatchEvent(new CustomEvent('changed'))
+        }
+
+        setRedToGreenTransitionState()
+        {
+            this.redLightState = true;
+            this.yellowLightState = true;
+            this.greenLightState = false;
+
+            this.dispatchEvent(new CustomEvent('changed'));
+
+
+        }
+
+        setGreenLightState()
+        {
+            this.redLightState = false;
+            this.yellowLightState = false;
+            this.greenLightState = true;
+
+            this.dispatchEvent(new CustomEvent('changed'));
+
+
+        }
+
+        setRedLightState()
+        {
+            this.redLightState = true;
+            this.yellowLightState = false;
+            this.greenLightState = false;
+
+            this.dispatchEvent(new CustomEvent('changed'));
+
+
+        }
+
+        setGreenToRedTransitionState()
+        {
+            this.redLightState = false;
+            this.yellowLightState = true;
+            this.greenLightState = true;
+
+            this.dispatchEvent(new CustomEvent('changed'));
+
+
+        }
+
+        _showState()
+        {
+            console.log([this.redLightState, this.yellowLightState, this.greenLightState])
+        }
+
+        onTickEventHandler(event)
+        {
+            this.timer++;
+
+            if(this.timer >= 0 && this.timer < this.redTime)
+            {
+                this.setRedLightState();
+            }
+
+            if(this.timer >= this.redTime && this.timer < (this.redTime + this.transitionTime))
+            {
+                this.setRedToGreenTransitionState();
+            }
+            
+            if(this.timer >= (this.redTime + this.transitionTime) && this.timer < (this.redTime + this.transitionTime + this.greenTime))
+            {
+                this.setGreenLightState();
+            }
+
+            if(this.timer >= (this.redTime + this.transitionTime + this.greenTime) && this.timer < (this.redTime + 2*this.transitionTime + this.greenTime))
+            {
+                this.setGreenToRedTransitionState();
+            }
+
+            if(this.timer >= (this.redTime + 2*this.transitionTime + this.greenTime))
+            {
+                this.timer = 0;
+                this.setRedLightState();
+            }
+
+            console.log(this.timer);
+        }
+
+        run()
+        {
+            if(!this.isRunning)
+            {
+                this.worker = new Worker("timer.js");
+                this.worker.addEventListener('message', this.onTickEventHandler.bind(this));
+                this.isRunning = true;
+            }
+            else
+            {
+                console.log('Semaphore is running...')
+            }
+
+        }
+
+        shutdown()
+        {
+
+            if (this.isRunning)
+            {
+                this.worker.removeEventListener('message', this.onTickEventHandler);
+                this.worker.terminate();
+                this.setShutdownState();
+                this.isRunning = false;
+            }
+
+
+        }
+    }
+
+    let circle;
+
+    function main()
+    {
+        
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+
+        circle = new Circle(ctx, canvas.width);
+
+        let semaphore = new SemaphoreModel();
+        let view = new SemaphoreView(semaphore);
+
+        document.getElementById('on').onclick = () => semaphore.run();
+        document.getElementById('off').onclick = () => semaphore.shutdown(); 
+
+        function animate() 
+        {
+            circle.update();
+            circle.draw();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+        
+ 
+    }
+
+    window.onload = main;
+</script>
+    
+</html>
