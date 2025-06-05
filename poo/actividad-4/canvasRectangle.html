@@ -74,12 +74,9 @@
         }
 
         moveInDirection(distance) {
-            // Determina si el lado más largo es horizontal o vertical
             const isWidthLonger = this.rect.width >= this.rect.height;
             const angle = this.rect.angle;
 
-            // Si el lado largo es el ancho, se mueve según el ángulo directamente
-            // Si el lado largo es el alto, se le suma 90° (pi/2)
             const directionAngle = isWidthLonger ? angle : angle + Math.PI / 2;
 
             const dx = Math.cos(directionAngle) * distance;
