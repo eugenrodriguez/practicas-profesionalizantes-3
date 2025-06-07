@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Gestión de Figuras</title>
+  <title>Gestión de Figuras (EventListeners sin Modularización)</title>
   <style>
     body {
       background: linear-gradient(#00fff7, #81fddc);
@@ -51,9 +51,8 @@
       font-weight: bold;
     }
 
-    /* Estilos para el botón de selección en la tabla */
     .select-button {
-      background-color: #4CAF50; /* Color verde */
+      background-color: #4CAF50; 
       color: white;
       border: none;
       padding: 5px 10px;
@@ -70,22 +69,21 @@
       background-color: #45a049;
     }
 
-    /* Estilo para la fila activa en la tabla */
     .active-row {
-      background-color: #d1f7d1; /* Un verde claro para resaltar */
+      background-color: #d1f7d1; 
       font-weight: bold;
     }
   </style>
 </head>
 <body>
   <div id="panel">
-    <button onclick="controller.createShape('rectangle')">Dibujar Rectángulo</button>
-    <button onclick="controller.createShape('circle')">Dibujar Círculo</button>
-    <button onclick="controller.createShape('triangle')">Dibujar Triángulo</button>
+    <button id="drawRectangleBtn">Dibujar Rectángulo</button>
+    <button id="drawCircleBtn">Dibujar Círculo</button>
+    <button id="drawTriangleBtn">Dibujar Triángulo</button>
     <label>Color de la figura:</label>
     <input type="color" id="colorPicker" value="#0000ff" />
     <div>Figura activa: <span id="activeShapeLabel">Ninguna</span></div>
-    <button onclick="controller.deleteActiveShape()">Eliminar Figura Activa</button>
+    <button id="deleteShapeBtn">Eliminar Figura Activa</button>
     <table>
       <thead><tr><th>Tipo</th><th>ID</th><th>Acción</th></tr></thead>
       <tbody id="shapeTable"></tbody>
@@ -225,15 +223,13 @@
       }
 
       initListeners() {
-        this.canvas.addEventListener("click", (e) => this.selectShape(e)); // Usamos 'this.canvas'
+        this.canvas.addEventListener("click", (e) => this.selectShape(e));
         window.addEventListener("keydown", (e) => this.keys[e.key] = true);
         window.addEventListener("keyup", (e) => this.keys[e.key] = false);
       }
 
-      // Nuevo método: createShape
       createShape(type) {
         const color = document.getElementById("colorPicker").value;
-        // Obtenemos dimensiones del canvas desde 'this.canvas'
         const x = 100 + Math.random() * (this.canvas.width - 200);
         const y = 100 + Math.random() * (this.canvas.height - 200);
         let shape;
@@ -245,7 +241,7 @@
         }
         shapeId = shapeId.trim();
 
-        if (this.shapes.some(s => s.id === shapeId)) { // Referencia a 'this.shapes'
+        if (this.shapes.some(s => s.id === shapeId)) {
           alert(`Ya existe una figura con el ID "${shapeId}". Por favor, elige otro.`);
           return;
         }
@@ -257,16 +253,14 @@
         }
 
         shape.id = shapeId;
-
-        this.addShape(shape); // Llama a 'this.addShape'
+        this.addShape(shape);
       }
 
-      // Nuevo método: deleteActiveShape
       deleteActiveShape() {
-        if (this.activeShape) { // Referencia a 'this.activeShape'
+        if (this.activeShape) {
           const confirmDelete = confirm(`¿Estás seguro de que quieres eliminar la figura ${this.activeShape.id}?`);
           if (confirmDelete) {
-            this.removeShape(this.activeShape); // Llama a 'this.removeShape'
+            this.removeShape(this.activeShape);
           }
         } else {
           alert("No hay ninguna figura activa para eliminar.");
@@ -319,16 +313,19 @@
         this.shapes.forEach((shape) => {
           const tr = document.createElement("tr");
           tr.dataset.shapeId = shape.id;
-          // Cambiado 'controller.setActiveShape' a 'this.setActiveShape'
           tr.innerHTML = `
             <td>${shape.constructor.name}</td>
             <td>${shape.id}</td>
-            <td><button class="select-button" onclick="controller.setActiveShape(controller.shapes.find(s => s.id === '${shape.id}'))">Seleccionar</button></td>
+            <td><button class="select-button" data-shape-id="${shape.id}">Seleccionar</button></td>
           `;
-          // ¡Importante! El onclick aquí todavía usa 'controller' porque es una cadena de texto
-          // que se evalúa en el ámbito global del HTML cuando se crea el botón.
-          // Si lo haces 'this.setActiveShape', 'this' no será la instancia del controlador.
-          // Mantener 'controller' aquí es correcto para esta implementación.
+          const selectButton = tr.querySelector('.select-button');
+          selectButton.addEventListener('click', () => {
+              const selectedShapeId = selectButton.dataset.shapeId;
+              const selectedShape = this.shapes.find(s => s.id === selectedShapeId);
+              if (selectedShape) {
+                  this.setActiveShape(selectedShape);
+              }
+          });
           tbody.appendChild(tr);
         });
         this.updateTableHighlight();
@@ -367,12 +364,17 @@
       }
     }
 
-    let controller; 
+
     
     function main() {
       const canvas = document.getElementById("canvas");
       const renderer = new CanvasRenderer(canvas);
-      controller = new ShapeController(canvas, renderer);
+      const controller = new ShapeController(canvas, renderer); 
+
+      document.getElementById("drawRectangleBtn").addEventListener("click", () => controller.createShape('rectangle'));
+      document.getElementById("drawCircleBtn").addEventListener("click", () => controller.createShape('circle'));
+      document.getElementById("drawTriangleBtn").addEventListener("click", () => controller.createShape('triangle'));
+      document.getElementById("deleteShapeBtn").addEventListener("click", () => controller.deleteActiveShape());
     }
 
     window.onload = main;
