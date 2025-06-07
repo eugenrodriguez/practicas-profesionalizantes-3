@@ -51,9 +51,8 @@
       font-weight: bold;
     }
 
-    /* Estilos para el botón de selección en la tabla */
     .select-button {
-      background-color: #4CAF50; /* Color verde */
+      background-color: #4CAF50; 
       color: white;
       border: none;
       padding: 5px 10px;
@@ -70,9 +69,8 @@
       background-color: #45a049;
     }
 
-    /* Estilo para la fila activa en la tabla */
     .active-row {
-      background-color: #d1f7d1; /* Un verde claro para resaltar */
+      background-color: #d1f7d1; 
       font-weight: bold;
     }
   </style>
@@ -101,13 +99,8 @@
         this.x = x;
         this.y = y;
         this.color = color;
-        // this.id = Shape.generateId(); // Eliminamos la generación automática aquí
       }
 
-      // El método generateId ya no es necesario si el ID se pide al usuario
-      // static generateId() {
-      //   return 'fig-' + Math.random().toString(36).substr(2, 5);
-      // }
 
       move(dx, dy) {
         this.x += dx;
@@ -237,7 +230,6 @@
       }
 
       addShape(shape) {
-        // Validación para evitar IDs duplicados
         if (this.shapes.some(s => s.id === shape.id)) {
           alert(`Ya existe una figura con el ID "${shape.id}". Por favor, elige otro.`);
           return;
@@ -282,7 +274,7 @@
         tbody.innerHTML = "";
         this.shapes.forEach((shape) => {
           const tr = document.createElement("tr");
-          tr.dataset.shapeId = shape.id; // Guarda el ID de la figura en el elemento tr
+          tr.dataset.shapeId = shape.id; 
           tr.innerHTML = `
             <td>${shape.constructor.name}</td>
             <td>${shape.id}</td>
@@ -290,7 +282,7 @@
           `;
           tbody.appendChild(tr);
         });
-        this.updateTableHighlight(); // Asegura que la fila activa se resalte después de actualizar la tabla
+        this.updateTableHighlight(); 
       }
 
       updateTableHighlight() {
@@ -335,15 +327,14 @@
       const y = 100 + Math.random() * (canvas.height - 200);
       let shape;
 
-      // Pedir el ID al usuario
       let shapeId = prompt(`Ingrese un ID para la figura ${type}:`);
       if (shapeId === null || shapeId.trim() === "") {
         alert("El ID de la figura no puede estar vacío. No se creará la figura.");
-        return; // Detener la creación de la figura si no se proporciona un ID
+        return; 
       }
-      shapeId = shapeId.trim(); // Eliminar espacios en blanco al inicio/final
+      shapeId = shapeId.trim(); 
 
-      // Validar si el ID ya existe antes de crear la figura
+      
       if (controller.shapes.some(s => s.id === shapeId)) {
         alert(`Ya existe una figura con el ID "${shapeId}". Por favor, elige otro.`);
         return;
@@ -355,7 +346,6 @@
         case "triangle": shape = new Triangle(x, y, color); break;
       }
 
-      // Asignar el ID ingresado por el usuario a la figura
       shape.id = shapeId;
 
       controller.addShape(shape);
