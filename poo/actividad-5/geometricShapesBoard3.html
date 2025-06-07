@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Gestión de Figuras (EventListeners sin Modularización)</title>
+  <title>Dibujar Figuras</title>
   <style>
     body {
       background: linear-gradient(#00fff7, #81fddc);
@@ -230,9 +230,28 @@
 
       createShape(type) {
         const color = document.getElementById("colorPicker").value;
-        const x = 100 + Math.random() * (this.canvas.width - 200);
-        const y = 100 + Math.random() * (this.canvas.height - 200);
+        let x, y;
         let shape;
+
+        let inputX = prompt(`Ingrese la coordenada X para la figura ${type}:`);
+        if (inputX === null || inputX.trim() === "" || isNaN(inputX)) {
+          alert("Coordenada X inválida. No se creará la figura.");
+          return;
+        }
+        x = parseInt(inputX);
+
+        let inputY = prompt(`Ingrese la coordenada Y para la figura ${type}:`);
+        if (inputY === null || inputY.trim() === "" || isNaN(inputY)) {
+          alert("Coordenada Y inválida. No se creará la figura.");
+          return;
+        }
+        y = parseInt(inputY);
+
+        if (x < 0 || x > this.canvas.width || y < 0 || y > this.canvas.height) {
+            alert(`Las coordenadas (${x}, ${y}) están fuera del canvas. Se ajustarán al rango.`);
+            x = Math.max(0, Math.min(x, this.canvas.width));
+            y = Math.max(0, Math.min(y, this.canvas.height));
+        }
 
         let shapeId = prompt(`Ingrese un ID para la figura ${type}:`);
         if (shapeId === null || shapeId.trim() === "") {
@@ -363,13 +382,11 @@
         requestAnimationFrame(() => this.animate());
       }
     }
-
-
     
     function main() {
       const canvas = document.getElementById("canvas");
       const renderer = new CanvasRenderer(canvas);
-      const controller = new ShapeController(canvas, renderer); 
+      const controller = new ShapeController(canvas, renderer);
 
       document.getElementById("drawRectangleBtn").addEventListener("click", () => controller.createShape('rectangle'));
       document.getElementById("drawCircleBtn").addEventListener("click", () => controller.createShape('circle'));
