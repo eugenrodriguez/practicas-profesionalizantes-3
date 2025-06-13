@@ -19,7 +19,7 @@
         super(x, y, color);
         this.width = 100;
         this.height = 50;
-        this.angle = 3;
+        this.angle = 0;
       }
 
       draw(ctx) {

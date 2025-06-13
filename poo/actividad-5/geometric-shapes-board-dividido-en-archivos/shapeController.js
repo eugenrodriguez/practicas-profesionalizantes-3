@@ -79,14 +79,16 @@ export class ShapeController {
         if (!activeShape) return;
 
         const s = this.speed;
-        if (this.keys["ArrowUp"]) this.shapeManager.moveActiveShape(0, -s);
-        if (this.keys["ArrowDown"]) this.shapeManager.moveActiveShape(0, s);
-        if (this.keys["ArrowLeft"]) this.shapeManager.moveActiveShape(-s, 0);
-        if (this.keys["ArrowRight"]) this.shapeManager.moveActiveShape(s, 0);
-
         if (activeShape instanceof Rectangle) {
-            if (this.keys["a"]) this.shapeManager.rotateActiveShape(-0.05);
-            if (this.keys["d"]) this.shapeManager.rotateActiveShape(0.05);
+            if (this.keys["ArrowUp"]) activeShape.forward(s);
+            if (this.keys["ArrowDown"]) activeShape.forward(-s);
+            if (this.keys["ArrowLeft"]) this.shapeManager.rotateActiveShape(-0.05);
+            if (this.keys["ArrowRight"]) this.shapeManager.rotateActiveShape(0.05);
+        } else {
+            if (this.keys["ArrowUp"]) this.shapeManager.moveActiveShape(0, -s);
+            if (this.keys["ArrowDown"]) this.shapeManager.moveActiveShape(0, s);
+            if (this.keys["ArrowLeft"]) this.shapeManager.moveActiveShape(-s, 0);
+            if (this.keys["ArrowRight"]) this.shapeManager.moveActiveShape(s, 0);
         }
     }
 
