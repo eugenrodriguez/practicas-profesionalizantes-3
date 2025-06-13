@@ -36,15 +36,6 @@
       }
 
       forward(speed) {
-        // Determinamos el lado más corto para el "frente"
-        // Si el ancho es el lado más corto, el "frente" es a lo largo del eje X.
-        // Si la altura es el lado más corto, el "frente" es a lo largo del eje Y.
-        // Asumiremos que el "frente" está alineado con la longitud del rectángulo (eje X local)
-        // ya que así lo dibuja fillRect(-width/2, -height/2, width, height)
-        // y así lo rota translate/rotate.
-        // Por lo tanto, el movimiento hacia adelante es a lo largo del eje X local.
-
-        // Componentes de velocidad basadas en el ángulo
         const dx = speed * Math.cos(this.angle);
         const dy = speed * Math.sin(this.angle);
 
