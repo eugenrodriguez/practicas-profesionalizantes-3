@@ -7,17 +7,17 @@
 </head>
 <body>
     <div id="panel">
-        <button id="drawRectangleBtn">Dibujar Rectángulo</button>
-        <button id="drawCircleBtn">Dibujar Círculo</button>
-        <button id="drawTriangleBtn">Dibujar Triángulo</button>
+        <button class="drawBtn" id="drawRectangleBtn">Dibujar Rectángulo</button>
+        <button class="drawBtn"id="drawCircleBtn">Dibujar Círculo</button>
+        <button class="drawBtn"id="drawTriangleBtn">Dibujar Triángulo</button>
         <label>Color de la figura:</label>
         <input type="color" id="colorPicker" value="#0000ff" />
         <div>Figura activa: <span id="activeShapeLabel">Ninguna</span></div>
-        <button id="deleteShapeBtn">Eliminar Figura Activa</button>
         <table>
             <thead><tr><th>Tipo</th><th>ID</th><th>Acción</th></tr></thead>
             <tbody id="shapeTable"></tbody>
         </table>
+        <button id="deleteShapeBtn">Eliminar Figura Activa</button>
     </div>
 
     <canvas id="canvas" width="1000" height="500"></canvas>

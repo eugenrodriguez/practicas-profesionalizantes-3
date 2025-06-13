@@ -3,6 +3,11 @@ export class UIManager {
         this.activeShapeLabel = document.getElementById("activeShapeLabel");
         this.shapeTable = document.getElementById("shapeTable");
         this.colorPicker = document.getElementById("colorPicker");
+        this.onShapeSelect = null;  // Callback para cuando se selecciona una forma
+    }
+
+    setShapeSelectCallback(callback) {
+        this.onShapeSelect = callback;
     }
 
     updateActiveShapeLabel(shapeId) {
@@ -22,6 +27,13 @@ export class UIManager {
                 <td><button class="select-button" data-shape-id="${shape.id}">Seleccionar</button></td>
             `;
             tbody.appendChild(tr);
+
+            const selectButton = tr.querySelector('.select-button');
+            selectButton.addEventListener('click', () => {
+                if (this.onShapeSelect) {
+                    this.onShapeSelect(shape.id);
+                }
+            });
         });
     }
 

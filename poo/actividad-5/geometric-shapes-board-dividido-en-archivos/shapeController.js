@@ -11,6 +11,13 @@ export class ShapeController {
         this.keys = {};
         this.speed = 5;
 
+        this.uiManager.setShapeSelectCallback((shapeId) => {
+            const shape = this.shapeManager.getAllShapes().find(s => s.id === shapeId);
+            if (shape) {
+                this.setActiveShape(shape);
+            }
+        });
+
         this.initListeners();
         this.animate();
     }
