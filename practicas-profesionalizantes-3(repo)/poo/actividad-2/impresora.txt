@@ -1,0 +1,19 @@
+Objeto: Impresora
+
+Propiedades/Atributos:
+
+Nombre                 | Tipo de dato   |  Constante/Variable   |  Rango de valores posibles  |  f(c)
+%NivelToner            |  double        |  Variable             |      0 / 100                | 
+capacidadBandejaHojas  |  int           |  Constante            |       100                   |
+cantidadHojasEnBandeja |  int           |  Variable             |      0 / 100                |
+estadoEncendida        |  bool          |  Variable             |    true / false             |
+
+
+Comportamientos: 
+
+Nombre                 | Parametros / Tipo               |  Retorno              
+encender               |  ---------                      |  -------             
+apagar                 |  ---------                      |  -------             
+cargarPapel            |  cantidadHojasEnBandeja: int    |  -------             
+cambiarToner           |  ---------------------          |  -------
+imprimir               |  ---------------------          |  -------

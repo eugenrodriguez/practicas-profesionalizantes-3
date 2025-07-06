@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas Rectángulo</title>
+</head>
+
+<style>
+    body 
+    {
+      background: linear-gradient(#00fff7, #81fddc);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
+    }
+
+    canvas
+    {
+        background-color: rgb(127, 255, 251);
+        border: 4px solid black;
+        border-radius: 40px;
+        box-shadow:  10px 10px 5px inset rgba(0, 0, 0, 0.4);
+    }
+
+</style>
+
+
+
+<body>
+    <canvas id="canvas" width="1000" height="500"></canvas>
+</body>
+
+<script type="text/javascript">
+
+    class Rectangle
+    {
+        constructor(canvasWidth, canvasHeight)
+        {
+            this.x = canvasWidth / 2;
+            this.y = canvasHeight / 2;
+            this.width = 100;
+            this.height = 50;
+            this.angle = 0;
+        }
+
+
+        draw(ctx)
+        {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.angle);
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+            ctx.restore();
+        }
+
+        rotate(radians)
+        {
+            this.angle += radians;
+        }
+
+        move(distance) {
+            const isWidthLonger = this.width >= this.height;
+            const angle = isWidthLonger ? this.angle : this.angle + Math.PI / 2;
+
+            const dx = Math.cos(angle) * distance;
+            const dy = Math.sin(angle) * distance;
+
+            this.x += dx;
+            this.y += dy;
+
+        }
+
+        
+    }
+
+    class CanvasRenderer {
+        constructor(canvas) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d');
+            this.objects = new Map();
+        }
+
+        addObject(id, object) {
+            this.objects.set(id, object);
+        }
+
+        render() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            for (let obj of this.objects.values()) {
+                obj.draw(this.ctx);
+            }
+        }
+    }
+
+
+    /*class RectangleController {
+        constructor(rectangle) {
+            this.rectangle = rectangle;
+            this.setupKeyboardControls();
+            this.animate();
+        }
+
+        setupKeyboardControls() {
+            document.addEventListener('keydown', (event) => {
+                const rotateStep = Math.PI / 60;
+                const step = 1; 
+
+                switch (event.key) {
+                    case 'ArrowUp':
+                        this.rectangle.moveInDirection(step);
+                        break;
+                    case 'ArrowDown':
+                        this.rectangle.moveInDirection(-step);
+                        break;
+                    case 'ArrowLeft':
+                        this.rectangle.rotateRect(-rotateStep);
+                        break;
+                    case 'ArrowRight':
+                        this.rectangle.rotateRect(rotateStep);
+                        break;
+                }
+            });
+        }
+    }*/
+
+     class RectangleController {
+        constructor(rectangle, renderer) {
+            this.rectangle = rectangle;
+            this.renderer = renderer;
+            this.keys = {};
+            this.movementSpeed = 2;
+            this.rotationSpeed = Math.PI / 70;
+            this.setupKeyboardControls();
+            this.animate();
+        }
+
+        setupKeyboardControls() {
+            document.addEventListener('keydown', (event) => {
+                this.keys[event.key] = true;
+            });
+
+            document.addEventListener('keyup', (event) => {
+                this.keys[event.key] = false;
+            });
+        }
+
+        animate() {
+            if (this.keys['ArrowUp']) {
+                this.rectangle.move(this.movementSpeed);
+            }
+            if (this.keys['ArrowDown']) {
+                this.rectangle.move(-this.movementSpeed);
+            }
+            if (this.keys['ArrowLeft']) {
+                this.rectangle.rotate(-this.rotationSpeed);
+            }
+            if (this.keys['ArrowRight']) {
+                this.rectangle.rotate(this.rotationSpeed);
+            }
+
+            this.renderer.render();
+            requestAnimationFrame(() => this.animate());
+        }
+    }
+    
+
+function main()
+{
+    let canvas = document.getElementById("canvas");
+    let renderer = new CanvasRenderer(canvas);
+    let rectangle = new Rectangle(canvas.width, canvas.height);
+
+    renderer.addObject("rect1", rectangle);
+    new RectangleController(rectangle, renderer);
+
+
+    /*function animate()
+    {
+        rectangle.update();
+        
+        requestAnimationFrame(animate);
+    }*/
+
+    //animate();
+
+
+}
+
+window.onload = main;
+
+</script>
+</html>

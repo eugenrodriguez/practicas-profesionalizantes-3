@@ -1,0 +1,41 @@
+-----------------------------------------------------------------------
+Proceso de abstraccion: Reconocer lo indispensable de lo prescindible.
+-----------------------------------------------------------------------
+
+Objeto: Rociador
+
+Propiedades/Atributos:
+
+Nombre                    |     Tipo de dato     |   Constante/Variable    |   Rango de valores posibles     |  f(c)
+-CapacidadEnML            |        double        |         constante       |           750.0                 |  ----
+-% de carga               |        double        |         variable        |           0 / 100               |  rociar, cargar, vaciar
+-VolumenExpulsadoAlRociar |        double        |         constante       |           10                    |  ----
+
+Refactoring 1: % de carga se cambia por volumen en ML y el rango es 0 a Capacidad                      
+Refactoring 2: Agregar propiedad: volumenExpulsadoAlRociar -Constante -10   
+
+Comportamientos:
+
+Nombre           |    Parametros/Tipo     |   Retorno   |                               
+-rociar                   ------              -------             
+-cargar              % de carga:double        -------          
+-vaciar                   ------              -------
+
+
+--------------------------------------
+Nombre de la entidad: Class/Prototype
+Atributos: Properties
+Comportamiento: Metodos
+--------------------------------------
+
+
+Revision:
+
+(Lleno, vacio)
+-Gatillo                           
+-Tapa                              
+-Valvula  
+-Sustancia                string                 variable  
+-tapar
+-destapar 
+-Material                 string                 constante                     ?

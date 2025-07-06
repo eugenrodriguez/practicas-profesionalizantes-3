@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Imagen 1</title>
+</head>
+
+<body>
+    <script>
+        let equalizadorConfig = new Map([
+            ["Presets", "Classical"],
+            ["Adjustments", new Map([
+                ["Preamp", 12.0],
+                ["Frecuencias", new Map([
+                    ["31.25Hz", 0.0],
+                    ["62.5Hz", 0.0],
+                    ["125Hz", 0.0],
+                    ["250Hz", 0.0],
+                    ["500Hz", 0.0],
+                    ["1KHz", 0.0],
+                    ["2KHz", -7.2],
+                    ["4KHz", -7.2],
+                    ["8KHz", -7.2],
+                    ["16KHz", -9.6]
+                ])]
+            ])],
+            ["inputFile", "C:\\libvlc-go-examples\\v3\\gtk3_equalizer\\nocturne.mp3"]
+        ]);
+    </script>
+</body>
+
+</html>
