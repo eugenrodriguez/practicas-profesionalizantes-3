@@ -1,0 +1,19 @@
+Objeto: Auto
+
+Propiedades/Atributos:
+
+Nombre                 | Tipo de dato   |  Constante/Variable   |  Rango de valores posibles        |  f(c)
+%combustible           |  double        |  Variable             |      0 / 100                      | 
+velocidad              |  int           |  variable            |       0 / 200                      |
+marcha                 |  string        |  Variable             |      "N", "1", "2", "3", "4", "5" |
+estadoEncendido        |  bool          |  Variable             |    true / false                   |
+
+
+Comportamientos: 
+
+Nombre                 | Parametros / Tipo               |  Retorno              
+encender               |  ---------                      |  -------             
+apagar                 |  ---------                      |  -------             
+acelerar               |  -----------                    |  -------             
+frenar                 |  ---------------------          |  -------
+cargarCombustible      |  cantidad: int                  |  -------

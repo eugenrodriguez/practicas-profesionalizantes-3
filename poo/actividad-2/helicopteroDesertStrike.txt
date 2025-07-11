@@ -1,0 +1,25 @@
+Objeto: Auto
+
+Propiedades/Atributos:
+
+Nombre                 | Tipo de dato   |  Constante/Variable   |  Rango de valores posibles        |  f(c)
+%combustible           |  double        |  Variable             |      0 / 100                      | 
+salud                  |  int           |  variable             |      0 / 200                      |
+municionMisiles        |  int           |  Variable             |      0 / 10                       |
+municionCañon          |  int           |  Variable             |      0 / 500                      |
+estadoEncendido        |  bool          |  Variable             |    true / false 
+posicion               |  int           |  Variable             |
+
+
+
+Comportamientos: 
+
+Nombre                 | Parametros / Tipo               |  Retorno              
+encender               |  ---------                      |  -------             
+apagar                 |  ---------                      |  -------             
+mover                  |  direccion: string              |  -------             
+dispararCañon()        |  ---------------------          |  -------
+dispararMisil()        |  ---------------                |  -------
+cargarCombustible()    |  cantidad: int                  |  -------
+recogerItem()          |  tipo: string                   |  -------
+recibirDaño()          |  cantidad: int

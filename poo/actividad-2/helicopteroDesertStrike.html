@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Helicóptero - Desert Strike</title>
+  <style>
+    body {
+  background-color: #2b2b1f; 
+  color: #d1d0b9; 
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+}
+
+h2 {
+  color: #a3b18a; 
+  text-shadow: 1px 1px 3px #000000aa;
+  font-weight: bold;
+}
+
+table {
+  border-collapse: collapse;
+  margin: 20px 0;
+  background-color: #3b3a2f; 
+  box-shadow: 0 0 8px #000000bb;
+  width: 320px;
+}
+
+td {
+  padding: 10px 15px;
+  border: 1px solid #6b6a58; 
+  min-width: 160px;
+}
+
+input[readonly] {
+  background-color: #2b2b1f;
+  color: #b4b99b; 
+  border: none;
+  font-weight: bold;
+  text-align: center;
+  width: 100%;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+progress {
+  width: 100%;
+  height: 20px;
+  border-radius: 4px;
+  background-color: #5a5a40;
+  box-shadow: inset 0 0 4px #000000aa;
+}
+
+progress::-webkit-progress-bar {
+  background-color: #5a5a40;
+  border-radius: 4px;
+}
+
+progress::-webkit-progress-value {
+  background-color: #8fbf43; 
+  border-radius: 4px;
+}
+
+.button-panel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 25px;
+  width: 340px;
+}
+
+button {
+  background-color: #4a5a2a; 
+  color: #d1d0b9;
+  border: 2px solid #758e4f;
+  padding: 10px 16px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Courier New', Courier, monospace;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  min-width: 140px;
+}
+
+button:hover {
+  background-color: #7ea84e; 
+  border-color: #a3b18a;
+  color: #1f2600;
+}
+
+#btnApagar {
+  background-color: #8b2b2b;
+  border-color: #b35a5a;
+}
+
+#btnApagar:hover {
+  background-color: #bf4a4a;
+  border-color: #d97a7a;
+  color: #fff6f6;
+}
+
+#btnEncender {
+  background-color: #3b6e3b;
+  border-color: #6a9a6a;
+}
+
+#btnEncender:hover {
+  background-color: #66a466;
+  border-color: #99c399;
+  color: #f0fff0;
+}
+
+.status-title {
+  font-size: 17px;
+  color: #b4b99b;
+  font-weight: 600;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+  </style>
+</head>
+<body>
+
+  <h2>🚁 Helicóptero - Desert Strike</h2>
+
+  <table>
+    <tr>
+      <td class="status-title">Estado</td>
+      <td><input id="estado" type="text" readonly></td>
+    </tr>
+    <tr>
+      <td class="status-title">Combustible</td>
+      <td><progress id="combustible" max="100" value="100">100%</progress></td>
+    </tr>
+    <tr>
+      <td class="status-title">Salud</td>
+      <td><progress id="salud" max="100" value="100">100%</progress></td>
+    </tr>
+    <tr>
+      <td class="status-title">Munición Cañón</td>
+      <td><input id="municionCanion" type="text" readonly></td>
+    </tr>
+    <tr>
+      <td class="status-title">Munición Misiles</td>
+      <td><input id="municionMisiles" type="text" readonly></td>
+    </tr>
+    <tr>
+      <td class="status-title">Posición (x, y)</td>
+      <td><input id="posicion" type="text" readonly></td>
+    </tr>
+  </table>
+
+  <div class="button-panel">
+    <button id="btnEncender">Encender</button>
+    <button id="btnApagar">Apagar</button>
+    <button id="btnMover">Mover</button>
+    <button id="btnDispararCanion">Disparar Cañón</button>
+    <button id="btnDispararMisil">Disparar Misil</button>
+    <button id="btnRecargarCombustible">Recargar Combustible</button>
+    <button id="btnRecogerItem">Recoger Ítem</button>
+    <button id="btnRecibirDanio">Recibir Daño</button>
+  </div>
+
+  <script>
+    class Helicoptero {
+      constructor() {
+        this._encendido = false;
+        this._combustible = 100;
+        this._salud = 100;
+        this._municionCanion = 500;
+        this._municionMisiles = 10;
+        this._posicionX = 0;
+        this._posicionY = 0;
+      }
+
+      get estado() {
+        return this._encendido ? "Encendido" : "Apagado";
+      }
+
+      get combustible() {
+        return this._combustible;
+      }
+
+      get salud() {
+        return this._salud;
+      }
+
+      get municionCanion() {
+        return this._municionCanion;
+      }
+
+      get municionMisiles() {
+        return this._municionMisiles;
+      }
+
+      get posicion() {
+        return `(${this._posicionX}, ${this._posicionY})`;
+      }
+
+      encender() {
+        if (this._combustible > 0 && this._salud > 0) {
+          this._encendido = true;
+        } else {
+          alert("No se puede encender. Revisa combustible y salud.");
+        }
+      }
+
+      apagar() {
+        this._encendido = false;
+      }
+
+      mover(direccion) {
+        if (!this._encendido) {
+          alert("El helicóptero está apagado.");
+          return;
+        }
+        if (this._combustible <= 0) {
+          alert("No hay combustible.");
+          return;
+        }
+        // Movimiento simple de 1 unidad por acción
+        switch(direccion) {
+          case "arriba":    this._posicionY += 1; break;
+          case "abajo":     this._posicionY -= 1; break;
+          case "derecha":   this._posicionX += 1; break;
+          case "izquierda": this._posicionX -= 1; break;
+          default:
+            alert("Dirección inválida");
+            return;
+        }
+        this._combustible -= 2;
+        if (this._combustible < 0) this._combustible = 0;
+      }
+
+      dispararCanion() {
+        if (!this._encendido) {
+          alert("El helicóptero está apagado.");
+          return;
+        }
+        if (this._municionCanion <= 0) {
+          alert("No hay munición en el cañón.");
+          return;
+        }
+        this._municionCanion -= 10;
+        if (this._municionCanion < 0) this._municionCanion = 0;
+        this._combustible -= 1;
+        if (this._combustible < 0) this._combustible = 0;
+      }
+
+      dispararMisil() {
+        if (!this._encendido) {
+          alert("El helicóptero está apagado.");
+          return;
+        }
+        if (this._municionMisiles <= 0) {
+          alert("No hay misiles disponibles.");
+          return;
+        }
+        this._municionMisiles -= 1;
+        this._combustible -= 3;
+        if (this._combustible < 0) this._combustible = 0;
+      }
+
+      cargarCombustible(cantidad) {
+        this._combustible += cantidad;
+        if (this._combustible > 100) this._combustible = 100;
+      }
+
+      recogerItem(tipo) {
+        switch(tipo.toLowerCase()) {
+          case "combustible":
+            this.cargarCombustible(20);
+            break;
+          case "municioncañon":
+          case "municioncanion":
+            this._municionCanion += 100;
+            if (this._municionCanion > 500) this._municionCanion = 500;
+            break;
+          case "municionmisiles":
+            this._municionMisiles += 3;
+            if (this._municionMisiles > 10) this._municionMisiles = 10;
+            break;
+          case "salud":
+            this._salud += 20;
+            if (this._salud > 100) this._salud = 100;
+            break;
+          default:
+            alert("Ítem desconocido.");
+        }
+      }
+
+      recibirDanio(cantidad) {
+        this._salud -= cantidad;
+        if (this._salud < 0) this._salud = 0;
+        if (this._salud === 0) {
+          alert("El helicóptero ha sido destruido.");
+          this.apagar();
+        }
+      }
+    }
+
+    function getHelicopteroProperties(heli) {
+      return {
+        estado: heli.estado,
+        combustible: heli.combustible,
+        salud: heli.salud,
+        municionCanion: heli.municionCanion,
+        municionMisiles: heli.municionMisiles,
+        posicion: heli.posicion,
+      };
+    }
+
+    function updateGUI(data) {
+      document.getElementById("estado").value = data.estado;
+      const comb = document.getElementById("combustible");
+      comb.value = data.combustible;
+      comb.innerText = data.combustible + "%";
+
+      const salud = document.getElementById("salud");
+      salud.value = data.salud;
+      salud.innerText = data.salud + "%";
+
+      document.getElementById("municionCanion").value = data.municionCanion;
+      document.getElementById("municionMisiles").value = data.municionMisiles;
+      document.getElementById("posicion").value = data.posicion;
+    }
+
+    function initGUI(helicoptero) {
+      const btnEncender = document.getElementById("btnEncender");
+      const btnApagar = document.getElementById("btnApagar");
+      const btnMover = document.getElementById("btnMover");
+      const btnDispararCanion = document.getElementById("btnDispararCanion");
+      const btnDispararMisil = document.getElementById("btnDispararMisil");
+      const btnRecargarCombustible = document.getElementById("btnRecargarCombustible");
+      const btnRecogerItem = document.getElementById("btnRecogerItem");
+      const btnRecibirDanio = document.getElementById("btnRecibirDanio");
+
+      btnEncender.onclick = () => {
+        helicoptero.encender();
+        updateGUI(getHelicopteroProperties(helicoptero));
+      };
+
+      btnApagar.onclick = () => {
+        helicoptero.apagar();
+        updateGUI(getHelicopteroProperties(helicoptero));
+      };
+
+      btnMover.onclick = () => {
+        const direccion = prompt("Ingrese dirección (arriba, abajo, izquierda, derecha):");
+        helicoptero.mover(direccion);
+        updateGUI(getHelicopteroProperties(helicoptero));
+      };
+
+      btnDispararCanion.onclick = () => {
+        helicoptero.dispararCanion();
+        updateGUI(getHelicopteroProperties(helicoptero));
+      };
+
+      btnDispararMisil.onclick = () => {
+        helicoptero.dispararMisil();
+        updateGUI(getHelicopteroProperties(helicoptero));
+      };
+
+      btnRecargarCombustible.onclick = () => {
+        const cantidad = parseInt(prompt("Cantidad de combustible a recargar (0-100):"));
+        if (!isNaN(cantidad) && cantidad > 0) {
+          helicoptero.cargarCombustible(cantidad);
+          updateGUI(getHelicopteroProperties(helicoptero));
+        } else {
+          alert("Cantidad inválida.");
+        }
+      };
+
+      btnRecogerItem.onclick = () => {
+        const tipo = prompt("Ingrese tipo de ítem a recoger (combustible, municionCanion, municionMisiles, salud):");
+        helicoptero.recogerItem(tipo);
+        updateGUI(getHelicopteroProperties(helicoptero));
+      };
+
+      btnRecibirDanio.onclick = () => {
+        const danio = parseInt(prompt("Ingrese cantidad de daño recibido:"));
+        if (!isNaN(danio) && danio > 0) {
+          helicoptero.recibirDanio(danio);
+          updateGUI(getHelicopteroProperties(helicoptero));
+        } else {
+          alert("Cantidad inválida.");
+        }
+      };
+
+      updateGUI(getHelicopteroProperties(helicoptero));
+    }
+
+    function main() {
+      const helicoptero = new Helicoptero();
+      initGUI(helicoptero);
+    }
+
+    window.onload = main;
+  </script>
+
+</body>
+</html>

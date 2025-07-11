@@ -1,0 +1,20 @@
+Objeto: Ventilador de Pie
+
+Propiedades/Atributos:
+
+Nombre                 | Tipo de dato   |  Constante/Variable      |  Rango de valores posibles |  f(c)
+velocidadActual        |  int           |  Variable                |      1 / 3                 | 
+estaEncendido          |  bool          |  variable                |      true / false          |
+altura |  int          |  Variable      |  variable                | 80, 90, 100, ..., 200      |
+modoOscilacion         |  bool          |  Variable                |    true / false            |
+
+
+Comportamientos: 
+
+Nombre                             | Parametros / Tipo               |  Retorno              
+encender()                         |  ---------                      |  -------             
+apagar()                           |  ---------                      |  -------             
+cambiarVelocidad()                 |  nuevaVelocidad: int            |  -------             
+aumentarAltura()                   |  nuevaAltura: int               |  -------
+activarOscilacion()                |  ---------------------          |  -------
+desactivarOscilacion()             |  -------------------

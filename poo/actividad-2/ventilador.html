@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ventilador de Pie</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif;
+      text-align: center; 
+    }
+
+    .estado { 
+      margin: 20px auto; 
+      font-size: 18px; 
+      background: #fff; 
+      padding: 10px 20px; 
+      border-radius: 10px; 
+      display: inline-block;  
+    }
+
+    .controles { 
+      margin-top: 20px; 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      justify-content: center; 
+    }
+
+    button { 
+      padding: 10px 15px; 
+      font-size: 14px; 
+      cursor: pointer; 
+      border: none; 
+      border-radius: 5px; 
+      background-color: #555; 
+      color: white; 
+    }
+
+    button:hover { 
+      background-color: #000; 
+    }
+  </style>
+</head>
+<body>
+  <h1>Ventilador de Pie</h1>
+  <div class="estado">
+    Estado: <span id="estado">Apagado</span> |
+    Velocidad: <span id="velocidad">0</span> |
+    Altura: <span id="altura">100</span> cm |
+    Oscilación: <span id="oscilacion">Desactivada</span>
+  </div>
+  <div class="controles">
+    <button id="btnEncender">Encender</button>
+    <button id="btnApagar">Apagar</button>
+    <button id="btnVel1">Velocidad 1</button>
+    <button id="btnVel2">Velocidad 2</button>
+    <button id="btnVel3">Velocidad 3</button>
+    <button id="btnAltura">Aumentar altura</button>
+    <button id="btnAlturaMenos">Disminuir altura</button>
+    <button id="btnOscilarOn">Activar oscilación</button>
+    <button id="btnOscilarOff">Desactivar oscilación</button>
+  </div>
+
+<script>
+function actualizarVista(ventilador) {
+  document.getElementById('estado').textContent = ventilador.estaEncendido ? 'Encendido' : 'Apagado';
+  document.getElementById('velocidad').textContent = ventilador.velocidadActual;
+  document.getElementById('altura').textContent = ventilador.altura;
+  document.getElementById('oscilacion').textContent = ventilador.modoOscilacion ? 'Activada' : 'Desactivada';
+}
+
+class Ventilador {
+  constructor() {
+    this._estaEncendido = false;
+    this._velocidadActual = 0;
+    this._altura = 100;
+    this._modoOscilacion = false;
+    this._alturaMin = 80;
+    this._alturaMax = 200;
+  }
+
+  get estaEncendido() 
+  { 
+    return this._estaEncendido; 
+  }
+
+  set estaEncendido(valor) 
+  { 
+    this._estaEncendido = valor; 
+  }
+
+  get velocidadActual() 
+  { 
+    return this._velocidadActual; 
+  }
+
+  set velocidadActual(valor) 
+  { 
+    this._velocidadActual = valor; 
+  }
+
+  get altura() 
+  { 
+    return this._altura; 
+  }
+
+  set altura(valor) 
+  { 
+    this._altura = valor; 
+  }
+
+  get modoOscilacion() 
+  { 
+    return this._modoOscilacion; 
+  }
+
+  set modoOscilacion(valor) 
+  { 
+    this._modoOscilacion = valor; 
+  }
+
+  encender() {
+    this.estaEncendido = true;
+    if (this.velocidadActual === 0) this.velocidadActual = 1;
+    actualizarVista(this);
+  }
+
+  apagar() {
+    this.estaEncendido = false;
+    this.velocidadActual = 0;
+    actualizarVista(this);
+  }
+
+  cambiarVelocidad(nuevaVelocidad) {
+    if (this.estaEncendido) {
+      this.velocidadActual = nuevaVelocidad;
+    }
+    actualizarVista(this);
+  }
+
+  aumentarAltura() {
+    if (this.altura < this._alturaMax) {
+      this.altura += 10;
+      if (this.altura > this._alturaMax) this.altura = this._alturaMax;
+    }
+    actualizarVista(this);
+  }
+
+  disminuirAltura() {
+    if (this.altura > this._alturaMin) {
+      this.altura -= 10;
+      if (this.altura < this._alturaMin) this.altura = this._alturaMin;
+    }
+    actualizarVista(this);
+  }
+
+  activarOscilacion() {
+    this.modoOscilacion = true;
+    actualizarVista(this);
+  }
+
+  desactivarOscilacion() {
+    this.modoOscilacion = false;
+    actualizarVista(this);
+  }
+}
+
+function main() {
+  let ventilador = new Ventilador();
+
+  function onEncenderClick() { ventilador.encender(); }
+  function onApagarClick() { ventilador.apagar(); }
+  function onVel1Click() { ventilador.cambiarVelocidad(1); }
+  function onVel2Click() { ventilador.cambiarVelocidad(2); }
+  function onVel3Click() { ventilador.cambiarVelocidad(3); }
+  function onAlturaClick() { ventilador.aumentarAltura(); }
+  function onAlturaMenosClick() { ventilador.disminuirAltura(); }
+  function onOscilarOnClick() { ventilador.activarOscilacion(); }
+  function onOscilarOffClick() { ventilador.desactivarOscilacion(); }
+
+  document.getElementById('btnEncender').onclick = onEncenderClick;
+  document.getElementById('btnApagar').onclick = onApagarClick;
+  document.getElementById('btnVel1').onclick = onVel1Click;
+  document.getElementById('btnVel2').onclick = onVel2Click;
+  document.getElementById('btnVel3').onclick = onVel3Click;
+  document.getElementById('btnAltura').onclick = onAlturaClick;
+  document.getElementById('btnAlturaMenos').onclick = onAlturaMenosClick;
+  document.getElementById('btnOscilarOn').onclick = onOscilarOnClick;
+  document.getElementById('btnOscilarOff').onclick = onOscilarOffClick;
+
+  actualizarVista(ventilador);
+}
+
+window.onload = main;
+</script>
+</body>
+</html> 

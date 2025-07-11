@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Auto - Tablero de Control</title>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
+    h3 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #00ffcc;
+      text-shadow: 0 0 5px #00ffcc;
+    }
+
+    table {
+      background-color: #2c2c2c;
+      border: 2px solid #00ffcc;
+      border-collapse: collapse;
+      box-shadow: 0 0 15px rgba(0,255,204,0.3);
+      margin-bottom: 20px;
+    }
+
+    td {
+      border: 1px solid #444;
+      padding: 10px;
+      min-width: 140px;
+    }
+
+    input[readonly] {
+      background-color: #121212;
+      color: #0f0;
+      border: none;
+      text-align: center;
+      font-weight: bold;
+      width: 100%;
+    }
+
+    progress {
+      width: 100%;
+      height: 20px;
+      appearance: none;
+    }
+
+    progress::-webkit-progress-bar {
+      background-color: #333;
+      border-radius: 10px;
+    }
+
+    progress::-webkit-progress-value {
+      background-color: #0f0;
+      border-radius: 10px;
+    }
+
+    button {
+      background-color: #0044cc;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0066ff;
+    }
+
+    button:active {
+      background-color: #003399;
+    }
+
+    #btnApagar {
+      background-color: #cc0000;
+    }
+
+    #btnApagar:hover {
+      background-color: #e60000;
+    }
+
+    #btnCargarCombustible {
+      background-color: #00cc66;
+    }
+
+    #btnCargarCombustible:hover {
+      background-color: #00e673;
+    }
+
+  </style>
+</head>
+<body>
+
+<h3>🚗 Panel del Auto</h3>
+
+<table>
+  <tr>
+    <td>Estado</td>
+    <td><input id="estado" type="text" readonly></td>
+  </tr>
+  <tr>
+    <td>Combustible</td>
+    <td><progress id="combustible" max="100" value="100">100%</progress></td>
+  </tr>
+  <tr>
+    <td>Velocidad (km/h)</td>
+    <td><input id="velocidad" type="text" readonly></td>
+  </tr>
+  <tr>
+    <td>Marcha</td>
+    <td><input id="marcha" type="text" readonly></td>
+  </tr>
+</table>
+
+<div>
+  <button id="btnEncender">Encender</button>
+  <button id="btnApagar">Apagar</button>
+  <button id="btnAcelerar">Acelerar</button>
+  <button id="btnFrenar">Frenar</button>
+  <button id="btnCargarCombustible">Cargar Combustible</button>
+</div>
+
+<script>
+class Auto {
+  constructor() {
+    this._encendido = false;
+    this._combustible = 100;
+    this._velocidad = 0;
+    this._marcha = 'N';
+  }
+
+  get estado() {
+    return this._encendido ? "Encendido" : "Apagado";
+  }
+
+  get combustible() {
+    return this._combustible;
+  }
+
+  get velocidad() {
+    return this._velocidad;
+  }
+
+  get marcha() {
+    return this._marcha;
+  }
+
+  encender() {
+    if (this._combustible > 0) {
+      this._encendido = true;
+    } else {
+      alert("No hay combustible.");
+    }
+  }
+
+  apagar() {
+    this._encendido = false;
+    this._velocidad = 0;
+    this._marcha = 'N';
+  }
+
+  acelerar() {
+    if (!this._encendido) {
+      alert("El auto está apagado.");
+      return;
+    }
+    if (this._combustible <= 0) {
+      alert("No hay combustible.");
+      return;
+    }
+    if (this._velocidad >= 200) {
+      alert("Velocidad máxima alcanzada.");
+      return;
+    }
+    this._velocidad += 10;
+    if (this._velocidad > 200) this._velocidad = 200;
+    this._combustible -= 5;
+    if (this._combustible < 0) this._combustible = 0;
+    this._marcha = this._velocidad === 0 ? 'N' :
+                   this._velocidad < 20 ? '1' :
+                   this._velocidad < 40 ? '2' :
+                   this._velocidad < 60 ? '3' :
+                   this._velocidad < 90 ? '4' : '5';
+  }
+
+  frenar() {
+    if (this._velocidad > 0) {
+      this._velocidad -= 10;
+      if (this._velocidad < 0) this._velocidad = 0;
+    }
+    this._marcha = this._velocidad === 0 ? 'N' :
+                   this._velocidad < 20 ? '1' :
+                   this._velocidad < 40 ? '2' :
+                   this._velocidad < 60 ? '3' :
+                   this._velocidad < 90 ? '4' : '5';
+  }
+
+  cargarCombustible(cantidad) {
+    this._combustible += cantidad;
+    if (this._combustible > 100) this._combustible = 100;
+  }
+}
+
+function getAutoProperties(auto) {
+  return {
+    estado: auto.estado,
+    combustible: auto.combustible,
+    velocidad: auto.velocidad,
+    marcha: auto.marcha
+  };
+}
+
+function updateGUI(autoData) {
+  document.getElementById("estado").value = autoData.estado;
+  const comb = document.getElementById("combustible");
+  comb.value = autoData.combustible;
+  comb.innerText = autoData.combustible + "%";
+  document.getElementById("velocidad").value = autoData.velocidad;
+  document.getElementById("marcha").value = autoData.marcha;
+}
+
+function initGUI(auto) {
+  document.getElementById("btnEncender").onclick = () => {
+    auto.encender();
+    updateGUI(getAutoProperties(auto));
+  };
+  document.getElementById("btnApagar").onclick = () => {
+    auto.apagar();
+    updateGUI(getAutoProperties(auto));
+  };
+  document.getElementById("btnAcelerar").onclick = () => {
+    auto.acelerar();
+    updateGUI(getAutoProperties(auto));
+  };
+  document.getElementById("btnFrenar").onclick = () => {
+    auto.frenar();
+    updateGUI(getAutoProperties(auto));
+  };
+  document.getElementById("btnCargarCombustible").onclick = () => {
+    const cantidad = parseInt(prompt("¿Cuánto combustible querés cargar? (0-100)"));
+    if (!isNaN(cantidad) && cantidad > 0) {
+      auto.cargarCombustible(cantidad);
+      updateGUI(getAutoProperties(auto));
+    } else {
+      alert("Cantidad inválida.");
+    }
+  };
+  updateGUI(getAutoProperties(auto));
+}function initGUI(auto) {
+    const btnEncender = document.getElementById("btnEncender");
+    const btnApagar = document.getElementById("btnApagar");
+    const btnAcelerar = document.getElementById("btnAcelerar");
+    const btnFrenar = document.getElementById("btnFrenar");
+    const btnCargarCombustible = document.getElementById("btnCargarCombustible");
+
+    btnEncender.onclick = () => {
+        auto.encender();
+        updateGUI(getAutoProperties(auto));
+    };
+
+    btnApagar.onclick = () => {
+        auto.apagar();
+        updateGUI(getAutoProperties(auto));
+    };
+
+    btnAcelerar.onclick = () => {
+        auto.acelerar();
+        updateGUI(getAutoProperties(auto));
+    };
+
+    btnFrenar.onclick = () => {
+        auto.frenar();
+        updateGUI(getAutoProperties(auto));
+    };
+
+    btnCargarCombustible.onclick = () => {
+        const cantidad = parseInt(prompt("¿Cuánto combustible querés cargar? (0-100)"));
+        if (!isNaN(cantidad) && cantidad > 0) {
+            auto.cargarCombustible(cantidad);
+            updateGUI(getAutoProperties(auto));
+        } else {
+            alert("Cantidad inválida.");
+        }
+    };
+    updateGUI(getAutoProperties(auto));
+}
+
+
+function main() {
+  const auto = new Auto();
+  initGUI(auto);
+}
+
+window.onload = main;
+</script>
+
+</body>
+</html>
