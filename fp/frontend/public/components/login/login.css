@@ -1,61 +1,94 @@
+:host {
+    --color-bg: #f8f9fa;
+    --color-card: #ffffff;
+    --color-primary: #4db6ac;   /* aqua green */
+    --color-primary-dark: #00897b;
+    --color-accent: #ff6b5a;    /* coral */
+    --color-text: #37474f;
+    --color-text-light: #90a4ae;
+    --radius: 180px;
+    --shadow: 0 6px 16px rgba(0,0,0,0.08);
+    --font: 'Poppins', sans-serif;
+}
+
 .form-container {
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 30px;
-    border-radius: 12px;
-    background-color: #e3f2fd; /* azul claro */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    font-family: 'Signika', sans-serif;
-}
-
-.form-container h1 {
+    max-width: 500px;
+    margin: 60px auto;
+    padding: 70px;
+    border-radius: var(--radius);
+    background-color: var(--color-card);
+    box-shadow: var(--shadow);
+    font-family: var(--font);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
-    margin-bottom: 20px;
-    color: #2e7d32; /* verde sólido, confianza y solidaridad */
+    gap: 12px;
 }
 
-.form-container p {
+h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: 8px;
+}
+
+p {
+    font-size: 1rem;
+    color: var(--color-text-light);
+    margin-bottom: 20px;
     text-align: center;
-    margin-bottom: 20px;
-    color: #555;
 }
 
-.form-container input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    border: 1px solid #b0bec5; /* gris suave */
-    font-size: 14px;
+input {
+    width: 90%;
+    padding: 15px;
+    margin: 6px 0 14px;
+    border-radius: 15px;
+    border-style: none;
+    font-size: 15px;
+    background-color: #fafafa;
+    outline: none;
+    transition: 0.2s ease;
 }
 
-.form-container button {
-    width: 100%;
-    padding: 12px;
-    background-color: #4caf50; /* verde solidaridad */
-    border: none;
-    border-radius: 8px;
+input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 5px rgba(77,182,172,0.2);
+}
+
+button {
+    width: 70%;
+    padding: 14px;
+    background-color: var(--color-accent);
     color: white;
+    border: none;
+    border-radius: 15px;
     font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: 0.2s ease;
 }
 
-.form-container button:hover {
-    background-color: #388e3c;
+button:hover {
+    background-color: #e64a3b;
+    transform: translateY(-2px);
 }
 
 .alternativa {
-    text-align: center;
     margin-top: 15px;
     font-size: 14px;
+    color: var(--color-text-light);
+    text-align: center;
 }
 
 .alternativa a {
-    color: #42a5f5; /* azul cooperación */
+    color: var(--color-primary);
     text-decoration: none;
+    font-weight: 500;
 }
 
 .alternativa a:hover {
+    color: var(--color-primary-dark);
     text-decoration: underline;
 }

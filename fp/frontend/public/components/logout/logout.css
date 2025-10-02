@@ -1,14 +1,24 @@
+:host {
+    --color-accent: #ff6b5a;
+    --color-accent-dark: #e64a3b;
+    --radius: 12px;
+    --font: 'Poppins', sans-serif;
+}
+
 button {
-    padding: 10px 20px;
-    background-color: #ffb74d; /* naranja empatía */
+    padding: 12px 22px;
+    background-color: var(--color-accent);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius);
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s ease;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--font);
+    transition: 0.2s ease;
 }
 
 button:hover {
-    background-color: #fb8c00;
+    background-color: var(--color-accent-dark);
+    transform: translateY(-2px);
 }
