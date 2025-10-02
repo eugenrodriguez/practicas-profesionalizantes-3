@@ -1,19 +1,16 @@
-import express from 'express'
-import path from 'path'
-import { fileURLToPath } from 'url' 
+import express from 'express';
+import { login, logout, driverRegister, passengerRegister, checkStatus } from '../controllers/authController.js';
+import { protect } from '../middlewares/authMiddleware.js';
 
-const router = express.Router()
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const router = express.Router();
 
-function renderView(viewName) {
-    return (req, res) => {
-        res.sendFile(path.join(__dirname, '../../frontend/views', viewName + '.html'))
-    }
-}
+router.post('/register/driver', driverRegister);
+router.post('/register/passenger', passengerRegister);
+router.post('/login', login);
+router.post('/logout', logout);
+router.get('/status', protect, checkStatus);
+router.get('/profile', protect, function(req, res) {
+    res.json({ message: 'Acceso autorizado a datos privados', user: req.user });
+});
 
-router.get('/', renderView('index'))
-router.get('/login', renderView('login'))
-router.get('/register', renderView('register'))
-
-
-export default router   
+export default router;

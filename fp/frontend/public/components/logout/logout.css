@@ -1,0 +1,14 @@
+button {
+    padding: 10px 20px;
+    background-color: #ffb74d; /* naranja empatía */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+button:hover {
+    background-color: #fb8c00;
+}
