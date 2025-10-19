@@ -1,29 +1,35 @@
 import express from 'express';
 import path from 'path';
-import { protect } from '../middlewares/authMiddleware.js';
+import { SessionService } from '../services/SessionService.js';
 
 const viewRouter = express.Router();
+const sessionService = new SessionService();
 const __dirname = path.resolve();
 
-function serveIndexHTML(req, res) {
+function serveSPA(req, res) {
     res.sendFile(path.join(__dirname, 'frontend/public/index.html'));
 }
 
-function protectSPARoutes(req, res, next) {
-    const urlPath = req.url;
+const publicRoutes = [
+    '/login',
+    '/register',
+    '/register/driver',
+    '/register/passenger',
+    '/'
+];
 
-    if (urlPath === '/login' || urlPath.startsWith('/register') ||
-        urlPath.endsWith('.ico') || urlPath.endsWith('.css') || urlPath.endsWith('.js')) {
-        return next();
-    }
+publicRoutes.forEach(route => {
+    viewRouter.get(route, serveSPA);
+});
 
-    protect(req, res, function(err) {
-        if (err) return res.redirect('/login');
-        serveIndexHTML(req, res);
-    });
-}
+const protectedRoutes = [
+    '/dashboard',
+    '/profile'
+];
 
-viewRouter.use(protectSPARoutes);
-viewRouter.get(/(.*)/, serveIndexHTML);
+protectedRoutes.forEach(route => {
+    viewRouter.get(route, sessionService.protect, serveSPA);
+});
 
+viewRouter.get(/^\/(?!api|components|css|services|js|images|assets).*/, serveSPA);
 export default viewRouter;

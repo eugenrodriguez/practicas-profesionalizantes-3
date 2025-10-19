@@ -1,42 +1,57 @@
-// frontend/public/components/app/AppWC.js
 import '../login/LoginFormWC.js';
 import '../register/RegisterChoiceWC.js';
 import '../register/DriverRegisterWC.js';
 import '../register/PassengerRegisterWC.js';
 import '../logout/LogoutButtonWC.js';
-import { AuthService } from '../../services/AuthService.js';
+import '../dashboard/DashboardWC.js';
+import '../dashboard/CreateTripWC.js';
+import '../dashboard/MyTripsWC.js';
+import '../dashboard/TripRequestsWC.js';
+import '../dashboard/DriverProfileWC.js';
+import { api } from '../../services/api.js';
 
 class AppWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         this.routeChangeHandler = this.routeChangeHandler.bind(this);
+        this.routes = {
+            '/': 'login-form',
+            '/login': 'login-form',
+            '/register': 'register-choice',
+            '/register/driver': 'driver-register',
+            '/register/passenger': 'passenger-register',
+            '/dashboard': 'dashboard-view',
+            '/dashboard/create-trip': 'create-trip',
+            '/dashboard/my-trips': 'my-trips',
+            '/dashboard/requests': 'trip-requests',
+            '/dashboard/profile': 'conductor-profile'
+        };
     }
 
     connectedCallback() {
         this.routeChangeHandler();
         window.addEventListener('popstate', this.routeChangeHandler);
-        window.addEventListener('navigate', this.routeChangeHandler);
     }
 
     disconnectedCallback() {
         window.removeEventListener('popstate', this.routeChangeHandler);
-        window.removeEventListener('navigate', this.routeChangeHandler);
     }
 
     async routeChangeHandler() {
         const path = window.location.pathname;
+        // si la URL es /dashboard/requests?trip=ID -> usamos path '/dashboard/requests'
+        const basePath = path.startsWith('/dashboard/requests') ? '/dashboard/requests' : path;
+        const componentName = this.routes[basePath] || 'not-found-view';
 
-        if (path === '/' || path === '/login' || path.startsWith('/register')) {
-            this.renderView(path, null);
-            return;
-        }
-
-        if (path === '/dashboard') {
+        if (componentName === 'dashboard-view' || componentName.startsWith('my-') || componentName === 'create-trip' || componentName === 'trip-requests' || componentName === 'conductor-profile') {
+            // autenticación requerida
             try {
-                const authStatus = await AuthService.checkStatus();
-                if (authStatus.isAuthenticated) {
-                    this.renderView(path, authStatus.user);
+                const authStatus = await api.checkStatus();
+                if (authStatus.success || authStatus.isAuthenticated || authStatus.user) {
+                    // normalizo user en authStatus.user
+                    const user = authStatus.user || authStatus;
+                    this.renderView(componentName, user);
                 } else {
                     window.history.pushState({}, '', '/login');
                     window.dispatchEvent(new Event('popstate'));
@@ -46,15 +61,13 @@ class AppWC extends HTMLElement {
                 window.history.pushState({}, '', '/login');
                 window.dispatchEvent(new Event('popstate'));
             }
-            return;
+        } else {
+            this.renderView(componentName);
         }
-
-        // 404
-        this.renderView(path, null);
     }
 
-    renderView(path, user = null) {
-        this.shadowRoot.innerHTML = ''; // limpiar
+    renderView(componentName, user = null) {
+        this.shadowRoot.innerHTML = '';
 
         const linkElem = document.createElement('link');
         linkElem.rel = 'stylesheet';
@@ -62,34 +75,54 @@ class AppWC extends HTMLElement {
 
         const mainContainer = document.createElement('div');
 
-        if (path === '/' || path === '/login') {
-            const loginComp = document.createElement('login-form');
-            mainContainer.appendChild(loginComp);
-        } else if (path.startsWith('/register')) {
-            if (path === '/register/driver') {
-                const driverComp = document.createElement('driver-register');
-                mainContainer.appendChild(driverComp);
-            } else if (path === '/register/passenger') {
-                const passengerComp = document.createElement('passenger-register');
-                mainContainer.appendChild(passengerComp);
-            } else {
-                const choiceComp = document.createElement('register-choice');
-                mainContainer.appendChild(choiceComp);
+        switch (componentName) {
+            case 'login-form':
+            case 'register-choice':
+            case 'driver-register':
+            case 'passenger-register':
+                mainContainer.appendChild(document.createElement(componentName));
+                break;
+
+            case 'dashboard-view': {
+                const dashboard = document.createElement('dashboard-view');
+                dashboard.data = user;
+                mainContainer.appendChild(dashboard);
+                break;
             }
-        } else if (path === '/dashboard') {
-            mainContainer.classList.add('dashboard-container');
 
-            const title = document.createElement('h1');
-            title.textContent = `¡Bienvenido al Dashboard! ${user ? user.name : ''}`;
+            case 'create-trip': {
+                const create = document.createElement('create-trip');
+                mainContainer.appendChild(create);
+                break;
+            }
 
-            const logoutBtn = document.createElement('logout-button-wc');
+            case 'my-trips': {
+                const my = document.createElement('my-trips');
+                mainContainer.appendChild(my);
+                break;
+            }
 
-            mainContainer.append(title, logoutBtn);
-        } else {
-            mainContainer.classList.add('not-found-container');
-            const title = document.createElement('h1');
-            title.textContent = '404 | Página no encontrada';
-            mainContainer.appendChild(title);
+            case 'trip-requests': {
+                const reqs = document.createElement('trip-requests');
+                mainContainer.appendChild(reqs);
+                break;
+            }
+
+            case 'conductor-profile': {
+                const prof = document.createElement('conductor-profile');
+                // si quieres pasar user al profile:
+                if (user) prof.data = user;
+                mainContainer.appendChild(prof);
+                break;
+            }
+
+            default: {
+                const nf = document.createElement('div');
+                const t = document.createElement('h1');
+                t.textContent = '404 | Página no encontrada';
+                nf.appendChild(t);
+                mainContainer.appendChild(nf);
+            }
         }
 
         this.shadowRoot.append(linkElem, mainContainer);

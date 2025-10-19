@@ -1,60 +1,55 @@
-// frontend/public/components/logout/LogoutButtonWC.js
+import { api } from '../../services/api.js';
+
 class LogoutButtonWC extends HTMLElement {
     constructor() {
-        super()
-        this.attachShadow({ mode: 'open' })
-        this.handleLogout = this.handleLogout.bind(this)
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.handleLogout = this.handleLogout.bind(this);
     }
 
     connectedCallback() {
-        this.render()
-        this.addEvents()
+        this.render();
+        this.addEvents();
     }
 
     disconnectedCallback() {
-        this.removeEvents()
+        this.removeEvents();
     }
 
     render() {
-        this.shadowRoot.innerHTML = ''
+        this.shadowRoot.innerHTML = '';
 
-        const link = document.createElement('link')
-        link.rel = 'stylesheet'
-        link.href = '/components/logout/logout.css'
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/components/logout/logout.css';
 
-        const button = document.createElement('button')
-        button.textContent = 'Cerrar Sesión'
+        const button = document.createElement('button');
+        button.textContent = 'Cerrar Sesión';
+        button.id = 'logout-btn';
 
-        this.shadowRoot.append(link, button)
+        this.shadowRoot.append(link, button);
     }
 
     addEvents() {
-        const button = this.shadowRoot.querySelector('button')
-        if (button) button.addEventListener('click', this.handleLogout)
+        const button = this.shadowRoot.getElementById('logout-btn');
+        if (button) button.addEventListener('click', this.handleLogout);
     }
 
     removeEvents() {
-        const button = this.shadowRoot.querySelector('button')
-        if (button) button.removeEventListener('click', this.handleLogout)
+        const button = this.shadowRoot.getElementById('logout-btn');
+        if (button) button.removeEventListener('click', this.handleLogout);
     }
 
     async handleLogout() {
-        try {
-            const response = await fetch('/api/v1/logout', {
-                method: 'POST',
-                credentials: 'include' 
-            })
-            if (response.ok) {
-                alert('Sesión cerrada correctamente.')
-                window.location.replace('/')
-            } else {
-                alert('Error al cerrar sesión.')
-            }
-        } catch (err) {
-            console.error(err)
-            alert('Error de conexión con el servidor.')
+        const result = await api.logout();
+
+        if (result.success) {
+            alert('Sesión cerrada correctamente.');
+            window.location.replace('/');
+        } else {
+            alert(result.error);
         }
     }
 }
 
-customElements.define('logout-button-wc', LogoutButtonWC)
+customElements.define('logout-button-wc', LogoutButtonWC);

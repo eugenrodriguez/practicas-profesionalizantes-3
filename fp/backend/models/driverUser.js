@@ -1,19 +1,24 @@
-// backend/models/driverUser.js
 import User from './User.js';
-import { query } from '../config/db.js';
+import { db } from '../config/db.js';
 
 class DriverUser extends User {
-    constructor(name, email, password, licencia, patente, vehiculo) {
-        super(name, email, password, 'conductor');
+    constructor(name, email, password, licencia, patente, vehiculo, existingRoles = []) {
+        const roles = [...existingRoles, 'conductor'];
+        super(name, email, password, roles);
         this.licencia = licencia;
         this.patente = patente;
         this.vehiculo = vehiculo;
     }
 
-    async register() {
-        const userId = await this.insertUser();
+    async register(userId = null) {
+        if (!userId) {
+            userId = await this.insertUser();
+        }
+        
+        await this.assignRoles(userId);
+        
         try {
-            await query(
+            await db.query(
                 'INSERT INTO conductores (id, licencia, patente, vehiculo) VALUES (?, ?, ?, ?)',
                 [userId, this.licencia, this.patente, this.vehiculo]
             );
@@ -24,6 +29,8 @@ class DriverUser extends User {
             }
             throw err;
         }
+        
+        return userId;
     }
 }
 

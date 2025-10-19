@@ -1,0 +1,208 @@
+:host {
+    --color-bg: #f8f9fa;
+    --color-card: #ffffff;
+    --color-primary: #4db6ac;   /* aqua green */
+    --color-primary-dark: #00897b;
+    --color-primary-light: #80cbc4;
+    --color-accent: #ff6b5a;    /* coral */
+    --color-accent-light: #ffab9c;
+    --color-text: #37474f;
+    --color-text-light: #90a4ae;
+    --radius: 180px;
+    --radius-small: 15px;
+    --shadow: 0 6px 16px rgba(0,0,0,0.08);
+    --shadow-hover: 0 12px 24px rgba(0,0,0,0.12);
+    --font: 'Poppins', sans-serif;
+}
+
+.dashboard-container {
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    font-family: var(--font);
+    padding: 40px 20px;
+}
+
+.dashboard-header {
+    max-width: 1200px;
+    margin: 0 auto 40px;
+    padding: 50px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    border-radius: var(--radius);
+    color: white;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+    margin-bottom: 10px;
+}
+
+.role-info {
+    font-size: 1.1rem;
+    margin: 0;
+    opacity: 0.95;
+}
+
+.panel {
+    max-width: 1200px;
+    margin: 0 auto 40px;
+}
+
+.role-section {
+    margin-bottom: 40px;
+    padding: 100px;
+    background-color: var(--color-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.role-section h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 30px 0;
+    padding-bottom: 20px;
+    border-bottom: 3px solid var(--color-primary);
+    display: inline-block;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    padding: 25px;
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+    border-radius: var(--radius-small);
+    text-align: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(77,182,172,0.15);
+    transition: 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(77,182,172,0.25);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.action-button {
+    padding: 20px;
+    background: white;
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    border-radius: var(--radius-small);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s ease;
+    box-shadow: 0 2px 8px rgba(77,182,172,0.1);
+    font-family: var(--font);
+}
+
+.action-button:hover {
+    background-color: var(--color-primary);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.action-button:active {
+    transform: translateY(-1px);
+}
+
+.dashboard-footer {
+    max-width: 1200px;
+    margin: 40px auto 0;
+    padding: 30px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 30px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .role-section {
+        padding: 90px;
+    }
+
+    .stats-container {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+    }
+
+    .actions-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .action-button {
+        padding: 15px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-container {
+        padding: 20px 10px;
+    }
+
+    .dashboard-header {
+        padding: 20px;
+        border-radius: 15px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .role-info {
+        font-size: 0.9rem;
+    }
+
+    .role-section {
+        padding: 20px;
+        border-radius: 15px;
+    }
+
+    .role-section h2 {
+        font-size: 1.3rem;
+    }
+
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .action-button {
+        padding: 15px;
+        width: 100%;
+    }
+}
