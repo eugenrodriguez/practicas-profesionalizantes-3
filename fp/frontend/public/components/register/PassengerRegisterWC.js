@@ -28,7 +28,6 @@ class PassengerRegisterWC extends HTMLElement {
         link.href = '/components/register/register.css';
 
         link.onload = () => {
-        // Cuando el CSS esta cargado completamente, mostramos el componente.
             this.style.opacity = '1'; 
         };
 

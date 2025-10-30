@@ -36,7 +36,7 @@ class DriverProfileWC extends HTMLElement {
         
         const styles = document.createElement('link');
         styles.rel = 'stylesheet';
-        styles.href = '/components/dashboard/css/driver-profile.css'; // Asegúrate de que este CSS exista
+        styles.href = '/components/dashboard/css/driver-profile.css'; 
 
         styles.onload = () => {
             this.style.opacity = '1'; 
@@ -50,7 +50,6 @@ class DriverProfileWC extends HTMLElement {
         const form = document.createElement('form');
         form.id = 'profile-form';
 
-        // --- Sección de Información Personal ---
         const basicSection = document.createElement('div');
         basicSection.classList.add('profile-section');
         const basicTitle = document.createElement('h3');
@@ -61,8 +60,6 @@ class DriverProfileWC extends HTMLElement {
         basicSection.append(basicTitle, nameGroup, emailGroup);
         form.appendChild(basicSection);
 
-        // --- INICIO DE LA CORRECCIÓN ---
-        // Verificamos si el usuario tiene el rol de conductor y renderizamos su sección
         if (this.user && this.user.roles.includes('conductor')) {
             const conductorSection = document.createElement('div');
             conductorSection.classList.add('profile-section');
@@ -70,22 +67,17 @@ class DriverProfileWC extends HTMLElement {
             const conductorTitle = document.createElement('h3');
             conductorTitle.textContent = 'Datos del Conductor';
 
-            // Campo Vehículo (Editable)
             const vehiculoGroup = this.createFormGroup('Vehículo', 'vehiculo', 'text', this.user.vehiculo || '');
             
-            // Campo Patente (Editable)
             const patenteGroup = this.createFormGroup('Patente', 'patente', 'text', this.user.patente || '');
             
-            // Campo Licencia (No editable)
             const licenciaGroup = this.createFormGroup('Licencia', 'licencia', 'text', this.user.licencia || '', true);
             licenciaGroup.querySelector('.info-text').textContent = 'La licencia no se puede modificar.';
 
             conductorSection.append(conductorTitle, vehiculoGroup, patenteGroup, licenciaGroup);
             form.appendChild(conductorSection);
         }
-        // --- FIN DE LA CORRECCIÓN ---
 
-        // --- Sección de Contraseña ---
         const passwordSection = document.createElement('div');
         passwordSection.classList.add('profile-section', 'password-section');
         const passwordTitle = document.createElement('h3');
@@ -99,7 +91,6 @@ class DriverProfileWC extends HTMLElement {
         passwordSection.append(passwordTitle, currentPasswordGroup, newPasswordGroup, confirmPasswordGroup, passwordInfo);
         form.appendChild(passwordSection);
 
-        // --- Botones ---
         const buttonGroup = document.createElement('div');
         buttonGroup.classList.add('button-group');
         const submitBtn = document.createElement('button');

@@ -139,7 +139,6 @@ class MyBookingsWC extends HTMLElement {
             
             card.append(header, details);
             
-            // --- INICIO DE LA MODIFICACIÓN ---
             if (req.estado === 'aceptada') {
                 const actions = document.createElement('div');
                 actions.classList.add('booking-actions');
@@ -156,7 +155,6 @@ class MyBookingsWC extends HTMLElement {
                 actions.appendChild(liveBtn);
                 card.appendChild(actions);
             }
-            // --- FIN DE LA MODIFICACIÓN ---
 
             container.appendChild(card);
         });

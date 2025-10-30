@@ -1,6 +1,6 @@
 // frontend/public/components/dashboard/DashboardWC.js
-import './DriverPanelWC.js'; // Importamos el panel
-import './PassengerPanelWC.js'; // Importamos el panel
+import './DriverPanelWC.js'; 
+import './PassengerPanelWC.js'; 
 import '../logout/LogoutButtonWC.js';
 
 class DashboardWC extends HTMLElement {
@@ -58,7 +58,6 @@ class DashboardWC extends HTMLElement {
         return header;
     }
 
-    // Este es el método clave que decide qué paneles mostrar
     createPanel() {
         const panel = document.createElement('div');
         panel.classList.add('panel');
@@ -66,7 +65,6 @@ class DashboardWC extends HTMLElement {
         const roles = this.user.roles;
         const currentRole = sessionStorage.getItem('currentRole');
 
-        // Si el usuario tiene ambos roles, mostramos el que eligió
         if (roles.includes('conductor') && roles.includes('pasajero')) {
             if (currentRole === 'conductor') {
                 panel.appendChild(document.createElement('driver-panel-wc'));
@@ -74,7 +72,6 @@ class DashboardWC extends HTMLElement {
                 panel.appendChild(document.createElement('passenger-panel-wc'));
             }
         } 
-        // Si solo tiene un rol, mostramos el panel correspondiente
         else if (roles.includes('conductor')) {
             panel.appendChild(document.createElement('driver-panel-wc'));
         } else if (roles.includes('pasajero')) {
@@ -88,15 +85,14 @@ class DashboardWC extends HTMLElement {
         const footer = document.createElement('div');
         footer.classList.add('dashboard-footer');
         
-        // Si el usuario tiene ambos roles, mostramos el botón de cambio
         if (this.user.roles.includes('conductor') && this.user.roles.includes('pasajero')) {
             const switchBtn = document.createElement('button');
             switchBtn.textContent = 'Cambiar de Rol';
             switchBtn.classList.add('action-button');
             switchBtn.style.marginRight = '20px';
             switchBtn.addEventListener('click', () => {
-                sessionStorage.removeItem('currentRole'); // Limpiamos la selección
-                window.location.href = '/dashboard'; // Recargamos para ver la pantalla de selección
+                sessionStorage.removeItem('currentRole'); 
+                window.location.href = '/dashboard'; 
             });
             footer.appendChild(switchBtn);
         }

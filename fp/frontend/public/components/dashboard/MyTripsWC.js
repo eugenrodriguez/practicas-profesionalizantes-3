@@ -107,7 +107,6 @@ class MyTripsWC extends HTMLElement {
                     btns.appendChild(publishBtn);
                 }
 
-                // --- INICIO DE LA MODIFICACIÓN ---
                 if (estadoActual === 'activo' || estadoActual === 'en_curso') {
                     const liveBtn = document.createElement('button');
                     liveBtn.textContent = 'Ver en Vivo 📍';
@@ -119,7 +118,6 @@ class MyTripsWC extends HTMLElement {
                     });
                     btns.appendChild(liveBtn);
                 }
-                // --- FIN DE LA MODIFICACIÓN ---
 
                 const requestsBtn = document.createElement('button');
                 requestsBtn.textContent = 'Ver Solicitudes';

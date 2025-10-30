@@ -25,7 +25,7 @@ class PassengerPanelWC extends HTMLElement {
     }
 
     render() {
-        this.shadowRoot.innerHTML = ''; // Limpieza inicial segura
+        this.shadowRoot.innerHTML = ''; 
         const styles = document.createElement('link');
         styles.rel = 'stylesheet';
         styles.href = '/components/dashboard/css/dashboard.css';
@@ -63,7 +63,7 @@ class PassengerPanelWC extends HTMLElement {
             .filter(b => b.estado === 'aceptada' && new Date(b.fecha_salida) > now)
             .sort((a, b) => new Date(a.fecha_salida) - new Date(b.fecha_salida))[0];
 
-        const card = this.createStatCard('Próximo Viaje', ''); // Valor inicial vacío
+        const card = this.createStatCard('Próximo Viaje', ''); 
         card.classList.add('next-trip-card');
         
         const valueEl = card.querySelector('.stat-value');
@@ -78,7 +78,7 @@ class PassengerPanelWC extends HTMLElement {
             dateSpan.className = 'date';
             dateSpan.textContent = fechaStr;
 
-            valueEl.innerHTML = ''; // Limpiamos el valor inicial
+            valueEl.innerHTML = ''; 
             valueEl.append(dateSpan);
 
         } else {
@@ -102,7 +102,6 @@ class PassengerPanelWC extends HTMLElement {
         const valueEl = document.createElement('div');
         valueEl.classList.add('stat-value');
 
-        // --- CORRECCIÓN: Usamos textContent ---
         valueEl.textContent = value;
         
         const labelEl = document.createElement('div');

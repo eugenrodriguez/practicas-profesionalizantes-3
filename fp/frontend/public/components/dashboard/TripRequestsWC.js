@@ -5,15 +5,15 @@ class TripRequestsWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.tripId = null; // Puede ser null si vemos todas las solicitudes
+        this.tripId = null; 
         this.requests = [];
-        this.mode = 'single'; // 'single' para un viaje, 'all' para todas
+        this.mode = 'single'; 
     }
 
     connectedCallback() {
         const params = new URLSearchParams(window.location.search);
         this.tripId = params.get('trip');
-        this.mode = this.tripId ? 'single' : 'all'; // Determinamos el modo de operación
+        this.mode = this.tripId ? 'single' : 'all'; 
         this.load();
     }
 
@@ -25,13 +25,11 @@ class TripRequestsWC extends HTMLElement {
 
         const styles = document.createElement('link');
         styles.rel = 'stylesheet';
-        // --- CAMBIO 1: Volvemos a usar los estilos originales ---
         styles.href = '/components/dashboard/css/trip-requests.css';
 
         styles.onload = () => { this.style.opacity = '1'; };
 
         const container = document.createElement('div');
-        // --- CAMBIO 2: Usamos la clase CSS original ---
         container.classList.add('requests-container'); 
 
         const title = document.createElement('h2');

@@ -64,7 +64,6 @@ class PassengerProfileWC extends HTMLElement {
 
         basicSection.append(basicTitle, nameGroup, emailGroup);
 
-        // Información de pasajero
         const passengerSection = document.createElement('div');
         passengerSection.classList.add('profile-section');
 
@@ -76,7 +75,6 @@ class PassengerProfileWC extends HTMLElement {
 
         passengerSection.append(passengerTitle, telefonoGroup, direccionGroup);
 
-        // Cambiar contraseña
         const passwordSection = document.createElement('div');
         passwordSection.classList.add('profile-section', 'password-section');
 
@@ -93,7 +91,6 @@ class PassengerProfileWC extends HTMLElement {
 
         passwordSection.append(passwordTitle, currentPasswordGroup, newPasswordGroup, confirmPasswordGroup, passwordInfo);
 
-        // Botones
         const buttonGroup = document.createElement('div');
         buttonGroup.classList.add('button-group');
 
@@ -206,12 +203,10 @@ class PassengerProfileWC extends HTMLElement {
 
         if (res.success) {
             this.showAlert('Perfil actualizado correctamente', 'success');
-            // Limpiar campos de contraseña
             form.currentPassword.value = '';
             form.newPassword.value = '';
             form.confirmPassword.value = '';
             
-            // Recargar perfil
             setTimeout(() => {
                 this.loadProfile();
             }, 2000);
@@ -221,7 +216,6 @@ class PassengerProfileWC extends HTMLElement {
     }
 
     showAlert(message, type) {
-        // Eliminar alertas anteriores
         const existingAlert = this.shadowRoot.querySelector('.alert');
         if (existingAlert) {
             existingAlert.remove();
@@ -235,7 +229,6 @@ class PassengerProfileWC extends HTMLElement {
         const title = container.querySelector('h2');
         container.insertBefore(alert, title.nextSibling);
 
-        // Auto-remover después de 5 segundos
         setTimeout(() => {
             alert.remove();
         }, 5000);

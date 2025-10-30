@@ -47,15 +47,12 @@ class LogoutButtonWC extends HTMLElement {
         if (result.success) {
             alert('Sesión cerrada correctamente.');
             
-            // Limpiar historial navegando a login y reemplazando el estado
             window.history.pushState(null, '', '/login');
             
-            // Prevenir volver atrás después de logout
             window.addEventListener('popstate', function preventBack(e) {
                 window.history.pushState(null, '', '/login');
             });
             
-            // Recargar la página para limpiar estado
             window.location.replace('/login');
         } else {
             alert(result.error);

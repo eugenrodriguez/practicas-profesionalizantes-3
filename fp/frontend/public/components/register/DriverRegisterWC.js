@@ -28,7 +28,6 @@ class DriverRegisterWC extends HTMLElement {
         link.href = '/components/register/register.css';
 
         link.onload = () => {
-        // Cuando el CSS esta cargado completamente, mostramos el componente.
             this.style.opacity = '1'; 
         };
 
@@ -36,7 +35,7 @@ class DriverRegisterWC extends HTMLElement {
         container.classList.add('form-container');
 
         const title = document.createElement('h1');
-        title.textContent = 'Registro Driver';
+        title.textContent = 'Registro Conductor';
 
         const form = document.createElement('form');
         form.id = 'driver-register-form';

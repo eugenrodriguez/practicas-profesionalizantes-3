@@ -6,7 +6,6 @@ create-trip-wc,
 driver-profile-wc,
 trip-requests-wc,
 my-trips-wc {
-    /* Inicialmente ocultamos el componente hasta que el CSS se haya cargado */
     opacity: 0; 
     display: block;
 }
@@ -15,7 +14,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Signika', sans-serif;
-    background-color: #a7d6d1; /* verde muy muy suave */
+    background-color: #a7d6d1; 
     color: #333;
 }
 
@@ -24,7 +23,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 a {
-    color: #42a5f5; /* azul colaboración */
+    color: #42a5f5; 
     text-decoration: none;
 }
 
@@ -32,7 +31,6 @@ a:hover {
     text-decoration: underline;
 }
 
-/* Dashboard */
 .dashboard-container {
     padding: 30px;
     max-width: 800px;

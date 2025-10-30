@@ -17,8 +17,8 @@ class LiveTripWC extends HTMLElement {
     set user(userData) {
         this._user = userData;
         if (this.isConnected && this.tripData) {
-            this.render(); // Volvemos a renderizar para mostrar/ocultar botones
-            this.loadLeaflet(); // Recargamos el mapa
+            this.render(); 
+            this.loadLeaflet(); 
         }
     }
 
@@ -110,8 +110,6 @@ class LiveTripWC extends HTMLElement {
         this.map = L.map(mapContainer).setView(startCoords, 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
 
-        // --- INICIO CORRECCIÓN (PUNTO #1: Marcadores) ---
-        // Se añade la configuración completa del ícono, incluyendo la sombra (shadowUrl).
         L.marker(startCoords, {
             icon: L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
@@ -127,7 +125,6 @@ class LiveTripWC extends HTMLElement {
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png', shadowSize: [41, 41]
             })
         }).addTo(this.map).bindPopup('Destino');
-        // --- FIN CORRECCIÓN (PUNTO #1) ---
 
         const waypoints = [ L.latLng(origen_lat, origen_lng), L.latLng(destino_lat, destino_lng) ];
         if (this.tripData.waypoints && this.tripData.waypoints.length > 2) {
@@ -208,21 +205,19 @@ class LiveTripWC extends HTMLElement {
         
         mapContainer.append(mapDiv);
 
-        // --- INICIO CORRECCIÓN (PUNTO #2: Botones solo para conductor) ---
-        // Verificamos el rol del usuario ANTES de crear los botones.
+
         if (this.user && this.tripData && this.user.id === this.tripData.conductor_id) {
             const driverControls = document.createElement('div');
             driverControls.id = 'driver-controls';
-            driverControls.style.display = 'flex'; // Los mostramos directamente
+            driverControls.style.display = 'flex'; 
 
             const startBtn = document.createElement('button');
             startBtn.id = 'start-btn';
             
-            // Lógica para el estado del botón
             if (this.tripData.estado === 'en_curso') {
                 startBtn.textContent = 'Viaje en Curso';
                 startBtn.disabled = true;
-                this.startSimulation(); // Si el viaje ya empezó, reanuda la simulación
+                this.startSimulation(); 
             } else if (this.tripData.estado === 'finalizado') {
                 startBtn.textContent = 'Viaje Finalizado';
                 startBtn.disabled = true;
@@ -238,7 +233,6 @@ class LiveTripWC extends HTMLElement {
                 startBtn.disabled = true;
             });
 
-            // Solo añadimos los controles si el usuario es el conductor
             driverControls.append(startBtn);
             mapContainer.append(driverControls);
         }

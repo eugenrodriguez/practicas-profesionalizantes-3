@@ -29,7 +29,6 @@ class LoginFormWC extends HTMLElement {
         link.href = '/components/login/login.css';
 
         link.onload = () => {
-        // Cuando el CSS esta cargado completamente, mostramos el componente.
             this.style.opacity = '1'; 
         };
 

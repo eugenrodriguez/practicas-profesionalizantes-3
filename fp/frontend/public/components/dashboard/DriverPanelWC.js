@@ -25,7 +25,7 @@ class DriverPanelWC extends HTMLElement {
     }
 
     render() {
-        this.shadowRoot.innerHTML = ''; // Limpieza inicial segura
+        this.shadowRoot.innerHTML = ''; 
         const styles = document.createElement('link');
         styles.rel = 'stylesheet';
         styles.href = '/components/dashboard/css/dashboard.css';
@@ -40,11 +40,10 @@ class DriverPanelWC extends HTMLElement {
         statsContainer.classList.add('stats-container');
         
         const pendingRequests = this.driverTrips.reduce((acc, trip) => acc + (trip.solicitudes_pendientes || 0), 0);
-        // Asumiendo que quieres mostrar el número de viajes creados
         statsContainer.append(
             this.createStatCard('Viajes Creados', this.driverTrips.length),
-            this.createStatCard('Calificación', '4.9 ⭐'), // Hardcodeado por ahora
-            this.createStatCard('Solicitudes Pendientes', pendingRequests) // Placeholder
+            this.createStatCard('Calificación', '4.9 ⭐'), 
+            this.createStatCard('Solicitudes Pendientes', pendingRequests) 
         );
         
         const actions = document.createElement('div');
@@ -66,7 +65,6 @@ class DriverPanelWC extends HTMLElement {
         const valueEl = document.createElement('div');
         valueEl.classList.add('stat-value');
         
-        // --- CORRECCIÓN: Usamos textContent ---
         valueEl.textContent = value; 
 
         const labelEl = document.createElement('div');

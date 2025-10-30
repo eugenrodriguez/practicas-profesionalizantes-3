@@ -134,7 +134,6 @@ class SearchTripsWC extends HTMLElement {
             hour: '2-digit', minute: '2-digit'
         });
 
-        // --- CAMBIO: Se usan createElement para cada línea de detalle ---
         const createDetailLine = (label, value) => {
             const p = document.createElement('p');
             const strong = document.createElement('strong');
@@ -165,7 +164,6 @@ class SearchTripsWC extends HTMLElement {
         return card;
     }
 
-    // ... (El resto de los métodos addEvents, handleSearch, handleRequestSeat se mantienen igual) ...
     addEvents() {
         const form = this.shadowRoot.getElementById('search-form');
         if (form) {
@@ -202,16 +200,14 @@ class SearchTripsWC extends HTMLElement {
         const tripId = e.target.dataset.tripId;
         const trip = this.trips.find(t => t.id == tripId);
         
-        // --- CAMBIO CLAVE: Usamos un prompt para pedir la cantidad de asientos ---
         const seatsInput = prompt(`¿Cuántos asientos deseas solicitar para este viaje? (Máximo disponible: ${trip.asientos_disponibles})`, "1");
 
-        if (seatsInput === null) { // El usuario canceló el prompt
+        if (seatsInput === null) { 
             return;
         }
 
         const seatsToBook = Number(seatsInput);
 
-        // Validaciones
         if (isNaN(seatsToBook) || seatsToBook <= 0) {
             alert('Por favor, ingresa un número válido de asientos.');
             return;
@@ -224,7 +220,6 @@ class SearchTripsWC extends HTMLElement {
         e.target.disabled = true;
         e.target.textContent = 'Solicitando...';
 
-        // --- CAMBIO CLAVE: Enviamos la cantidad de asientos a la API ---
         const res = await api.requestSeat(tripId, seatsToBook);
 
         if (res.success) {
