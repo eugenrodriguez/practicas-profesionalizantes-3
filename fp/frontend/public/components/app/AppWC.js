@@ -8,6 +8,12 @@ import '../dashboard/CreateTripWC.js';
 import '../dashboard/MyTripsWC.js';
 import '../dashboard/TripRequestsWC.js';
 import '../dashboard/DriverProfileWC.js';
+import '../dashboard/SearchTripsWC.js';
+import '../dashboard/MyBookingsWC.js';
+import '../dashboard/PassengerProfileWC.js';
+import '../dashboard/RoleChoiceWC.js'; 
+import '../dashboard/LiveTripWC.js'; 
+
 import { api } from '../../services/api.js';
 
 class AppWC extends HTMLElement {
@@ -15,18 +21,27 @@ class AppWC extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.routeChangeHandler = this.routeChangeHandler.bind(this);
+
         this.routes = {
-            '/': 'login-form',
-            '/login': 'login-form',
-            '/register': 'register-choice',
-            '/register/driver': 'driver-register',
-            '/register/passenger': 'passenger-register',
-            '/dashboard': 'dashboard-view',
-            '/dashboard/create-trip': 'create-trip',
-            '/dashboard/my-trips': 'my-trips',
-            '/dashboard/requests': 'trip-requests',
-            '/dashboard/profile': 'conductor-profile'
+            '/': { component: 'login-form-wc', auth: false },
+            '/login': { component: 'login-form-wc', auth: false },
+            '/register': { component: 'register-choice-wc', auth: false },
+            '/register/driver': { component: 'driver-register-wc', auth: false },
+            '/register/passenger': { component: 'passenger-register-wc', auth: false },
+            
+            // Rutas que requieren autenticación
+            '/dashboard': { component: 'dashboard-wc', auth: true }, 
+            '/dashboard/create-trip': { component: 'create-trip-wc', auth: true },
+            '/dashboard/my-trips': { component: 'my-trips-wc', auth: true },
+            '/dashboard/requests': { component: 'trip-requests-wc', auth: true },
+            '/dashboard/profile': { component: 'driver-profile-wc', auth: true },
+            '/dashboard/search-trips': { component: 'search-trips-wc', auth: true },
+            '/dashboard/my-bookings': { component: 'my-bookings-wc', auth: true },
+            '/dashboard/passenger-profile': { component: 'passenger-profile-wc', auth: true },
+            '/dashboard/live-trip': { component: 'live-trip-wc', auth: true }, // <- AÑADE ESTA RUTA
         };
+        
+        this.notFoundComponent = 'not-found-view'; 
     }
 
     connectedCallback() {
@@ -38,31 +53,52 @@ class AppWC extends HTMLElement {
         window.removeEventListener('popstate', this.routeChangeHandler);
     }
 
+    navigateTo(path) {
+        window.history.pushState({}, '', path);
+        window.dispatchEvent(new Event('popstate'));
+    }
+
+    getRouteInfo(path) {
+        const basePath = path.split('?')[0];        
+        return this.routes[basePath] || { component: this.notFoundComponent, auth: false };
+    }
+
     async routeChangeHandler() {
         const path = window.location.pathname;
-        // si la URL es /dashboard/requests?trip=ID -> usamos path '/dashboard/requests'
-        const basePath = path.startsWith('/dashboard/requests') ? '/dashboard/requests' : path;
-        const componentName = this.routes[basePath] || 'not-found-view';
+        const routeInfo = this.getRouteInfo(path);
 
-        if (componentName === 'dashboard-view' || componentName.startsWith('my-') || componentName === 'create-trip' || componentName === 'trip-requests' || componentName === 'conductor-profile') {
-            // autenticación requerida
+        if (routeInfo.auth) {
             try {
                 const authStatus = await api.checkStatus();
-                if (authStatus.success || authStatus.isAuthenticated || authStatus.user) {
-                    // normalizo user en authStatus.user
-                    const user = authStatus.user || authStatus;
-                    this.renderView(componentName, user);
+                if (authStatus.isAuthenticated && authStatus.user) {
+                    const user = authStatus.user;
+                    
+                    if (path === '/dashboard') {
+                        const roles = user.roles;
+                        const savedRole = sessionStorage.getItem('currentRole');
+
+                        if (roles.includes('conductor') && roles.includes('pasajero')) {
+                            if (savedRole) {
+                                this.renderView('dashboard-wc', user);
+                            } else {
+                                this.renderView('role-choice-wc', user);
+                            }
+                        } 
+                        else {
+                            this.renderView('dashboard-wc', user);
+                        }
+                    } else {
+                        this.renderView(routeInfo.component, user);
+                    }
                 } else {
-                    window.history.pushState({}, '', '/login');
-                    window.dispatchEvent(new Event('popstate'));
+                    this.navigateTo('/login');
                 }
             } catch (error) {
-                console.error(error);
-                window.history.pushState({}, '', '/login');
-                window.dispatchEvent(new Event('popstate'));
+                console.error("Error de autenticación:", error);
+                this.navigateTo('/login');
             }
         } else {
-            this.renderView(componentName);
+            this.renderView(routeInfo.component);
         }
     }
 
@@ -74,55 +110,22 @@ class AppWC extends HTMLElement {
         linkElem.href = '/css/styles.css';
 
         const mainContainer = document.createElement('div');
+        mainContainer.classList.add('app-main-content');
 
-        switch (componentName) {
-            case 'login-form':
-            case 'register-choice':
-            case 'driver-register':
-            case 'passenger-register':
-                mainContainer.appendChild(document.createElement(componentName));
-                break;
-
-            case 'dashboard-view': {
-                const dashboard = document.createElement('dashboard-view');
-                dashboard.data = user;
-                mainContainer.appendChild(dashboard);
-                break;
+        if (componentName !== this.notFoundComponent) {
+            const view = document.createElement(componentName);
+            
+            if (user) {
+                view.user = user;
             }
-
-            case 'create-trip': {
-                const create = document.createElement('create-trip');
-                mainContainer.appendChild(create);
-                break;
-            }
-
-            case 'my-trips': {
-                const my = document.createElement('my-trips');
-                mainContainer.appendChild(my);
-                break;
-            }
-
-            case 'trip-requests': {
-                const reqs = document.createElement('trip-requests');
-                mainContainer.appendChild(reqs);
-                break;
-            }
-
-            case 'conductor-profile': {
-                const prof = document.createElement('conductor-profile');
-                // si quieres pasar user al profile:
-                if (user) prof.data = user;
-                mainContainer.appendChild(prof);
-                break;
-            }
-
-            default: {
-                const nf = document.createElement('div');
-                const t = document.createElement('h1');
-                t.textContent = '404 | Página no encontrada';
-                nf.appendChild(t);
-                mainContainer.appendChild(nf);
-            }
+            mainContainer.appendChild(view);
+        } else {
+            const nf = document.createElement('div');
+            nf.style.cssText = "padding: 50px; text-align: center; color: #ff6b5a;";
+            const t = document.createElement('h1');
+            t.textContent = '404 | Página no encontrada';
+            nf.appendChild(t);
+            mainContainer.appendChild(nf);
         }
 
         this.shadowRoot.append(linkElem, mainContainer);

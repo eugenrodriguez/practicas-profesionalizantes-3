@@ -1,3 +1,4 @@
+// backend/routes/viewRouter.js
 import express from 'express';
 import path from 'path';
 import { SessionService } from '../services/SessionService.js';
@@ -22,14 +23,8 @@ publicRoutes.forEach(route => {
     viewRouter.get(route, serveSPA);
 });
 
-const protectedRoutes = [
-    '/dashboard',
-    '/profile'
-];
-
-protectedRoutes.forEach(route => {
-    viewRouter.get(route, sessionService.protect, serveSPA);
-});
+viewRouter.get(/^\/dashboard(\/.*)?$/, sessionService.protect, serveSPA);
 
 viewRouter.get(/^\/(?!api|components|css|services|js|images|assets).*/, serveSPA);
+
 export default viewRouter;

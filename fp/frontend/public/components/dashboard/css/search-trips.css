@@ -1,0 +1,217 @@
+/* frontend/public/components/dashboard/css/search-trips.css */
+
+.search-trips-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.search-trips-container h2 {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* Formulario de búsqueda */
+.search-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-form input {
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.search-form input:focus {
+    outline: none;
+    border-color: #4db6ac;
+}
+
+.search-form button {
+    padding: 0.75rem 1.5rem;
+    background: #4db6ac;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.search-form button:hover {
+    background: #26a69a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(77, 182, 172, 0.3);
+}
+
+.search-form button.clear-btn {
+    background: #90a4ae;
+}
+
+.search-form button.clear-btn:hover {
+    background: #78909c;
+}
+
+/* Lista de viajes */
+.trips-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.trip-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+.trip-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.trip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f5f5f5;
+}
+
+.trip-route {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.trip-price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #4db6ac;
+}
+
+.trip-details {
+    margin-bottom: 1rem;
+}
+
+.trip-details p {
+    margin: 0.5rem 0;
+    color: #546e7a;
+    font-size: 0.95rem;
+}
+
+.trip-details strong {
+    color: #37474f;
+}
+
+.trip-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.request-btn {
+    flex: 1;
+    padding: 0.75rem;
+    background: #4db6ac;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.request-btn:hover {
+    background: #26a69a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(77, 182, 172, 0.3);
+}
+
+.request-btn:disabled {
+    background: #b0bec5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Estado vacío */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: #546e7a;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #78909c;
+    font-size: 1rem;
+}
+
+/* Botón volver */
+.back-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 2rem auto 0;
+    padding: 0.75rem;
+    background: #90a4ae;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.back-btn:hover {
+    background: #78909c;
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-trips-container {
+        padding: 1rem;
+    }
+
+    .search-form {
+        grid-template-columns: 1fr;
+    }
+
+    .trip-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .trip-route {
+        font-size: 1.25rem;
+    }
+
+    .trip-price {
+        font-size: 1.5rem;
+    }
+}

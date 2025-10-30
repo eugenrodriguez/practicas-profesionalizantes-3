@@ -1,3 +1,4 @@
+//backend/controllers/profileController.js
 import UserProfile from '../models/UserProfile.js';
 
 export class ProfileController {
@@ -48,6 +49,17 @@ export class ProfileController {
         } catch (error) {
             console.error('Error obteniendo perfil:', error);
             return res.status(500).json({ success: false, error: 'Error interno al obtener perfil' });
+        }
+    }
+
+    async getPassengerStats(req, res) {
+        try {
+            const userId = req.user.id; 
+            const stats = await UserProfile.getPassengerStats(userId);
+            return res.json({ success: true, stats });
+        } catch (error) {
+            console.error('Error obteniendo estadísticas del pasajero:', error);
+            return res.status(500).json({ success: false, error: 'Error interno al obtener estadísticas' });
         }
     }
 }

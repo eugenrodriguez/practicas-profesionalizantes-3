@@ -1,3 +1,4 @@
+// frontend/public/services/api.js
 export class ApiClient {
     constructor(baseURL = '/api/v1') {
         this.baseURL = baseURL;
@@ -58,12 +59,82 @@ export class ApiClient {
     }
 
     // Trips
-    async createTrip(payload) { return this.request('/trips', { method: 'POST', body: JSON.stringify(payload) }); }
-    async getMyTrips() { return this.request('/trips/my', { method: 'GET' }); }
-    async getTripRequests(tripId) { return this.request(`/trips/${tripId}/requests`, { method: 'GET' }); }
-    async requestSeat(tripId) { return this.request(`/trips/${tripId}/request`, { method: 'POST' }); }
-    async respondRequest(requestId, action) { return this.request(`/trips/requests/${requestId}`, { method: 'PUT', body: JSON.stringify({ action }) }); }
+    async createTrip(payload) {
+        return this.request('/trips', { method: 'POST', body: JSON.stringify(payload) });
+    }
+
+    async getMyTrips() {
+        return this.request('/trips/my', { method: 'GET' });
+    }
+
+    async getUserTrips() {
+        return this.request('/trips/my', { method: 'GET' });
+    }
+
+    async getTripRequests(tripId) {
+        return this.request(`/trips/${tripId}/requests`, { method: 'GET' });
+    }
+
+    async requestSeat(tripId, seats) {
+        return this.request(`/trips/${tripId}/request`, {
+            method: 'POST',
+            body: JSON.stringify({ asientos: seats })
+        });
+    }
+
+    async respondRequest(requestId, action) {
+        return this.request(`/trips/requests/${requestId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ action })
+        });
+    }
+
+    // Profile
+    async getProfile() {
+        return this.request('/profile', { method: 'GET' });
+    }
+
+    async updateProfile(data) {
+        return this.request('/profile', {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async searchTrips(filters = {}) {
+        const params = new URLSearchParams();
+        if (filters.origen) params.append('origen', filters.origen);
+        if (filters.destino) params.append('destino', filters.destino);
+        if (filters.fecha) params.append('fecha', filters.fecha);
+        
+        const query = params.toString() ? `?${params.toString()}` : '';
+        return this.request(`/trips/search${query}`, { method: 'GET' });
+    }
+
+    async getAvailableTrips() {
+        return this.request('/trips/available', { method: 'GET' });
+    }
+
+    async getMyRequests() {
+        return this.request('/trips/my-requests', { method: 'GET' });
+    }
+
+
+    async updateTripStatus(tripId, status) {
+        return this.request(`/trips/${tripId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ estado: status })
+        });
+    }
+
+    async getAllDriverRequests() {
+        return this.request('/trips/my/requests', { method: 'GET' });
+    }
+
+    async getTripById(tripId) {
+        return this.request(`/trips/${tripId}`);
+    }
+    
 }
 
-// Exportás una instancia global reutilizable
 export const api = new ApiClient();

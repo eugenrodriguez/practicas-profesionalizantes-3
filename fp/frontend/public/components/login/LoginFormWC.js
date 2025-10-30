@@ -1,3 +1,4 @@
+//frontend/public/components/login/LoginFormWC.js
 import { api } from '../../services/api.js';
 
 class LoginFormWC extends HTMLElement {
@@ -19,9 +20,18 @@ class LoginFormWC extends HTMLElement {
     render() {
         this.shadowRoot.innerHTML = '';
 
+        
+        this.style.transition = 'opacity 0.3s ease-in-out';
+        this.style.opacity = '0';
+
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = '/components/login/login.css';
+
+        link.onload = () => {
+        // Cuando el CSS esta cargado completamente, mostramos el componente.
+            this.style.opacity = '1'; 
+        };
 
         const container = document.createElement('div');
         container.classList.add('form-container');
@@ -104,4 +114,4 @@ class LoginFormWC extends HTMLElement {
     }
 }
 
-customElements.define('login-form', LoginFormWC);
+customElements.define('login-form-wc', LoginFormWC);

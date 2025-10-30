@@ -1,0 +1,133 @@
+.profile-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 40px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+h2 {
+    color: #37474f;
+    font-size: 2rem;
+    margin-bottom: 30px;
+    border-bottom: 3px solid #4db6ac;
+    padding-bottom: 15px;
+}
+
+.profile-section {
+    margin-bottom: 30px;
+}
+
+.profile-section h3 {
+    color: #4db6ac;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #37474f;
+    font-weight: 600;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+input:focus {
+    outline: none;
+    border-color: #4db6ac;
+    box-shadow: 0 0 0 3px rgba(77, 182, 172, 0.1);
+}
+
+input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+button {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button[type="submit"] {
+    background: #4db6ac;
+    color: white;
+}
+
+button[type="submit"]:hover {
+    background: #00897b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(77, 182, 172, 0.3);
+}
+
+button[type="submit"]:disabled {
+    background: #b0bec5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.back-btn {
+    background: #90a4ae;
+    color: white;
+}
+
+.back-btn:hover {
+    background: #607d8b;
+    transform: translateY(-2px);
+}
+
+.info-text {
+    color: #90a4ae;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.password-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.alert-success {
+    background: #c8e6c9;
+    color: #2e7d32;
+    border: 2px solid #81c784;
+}
+
+.alert-error {
+    background: #ffcdd2;
+    color: #c62828;
+    border: 2px solid #ef5350;
+}

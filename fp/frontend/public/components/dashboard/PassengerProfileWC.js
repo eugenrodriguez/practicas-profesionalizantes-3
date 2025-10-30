@@ -1,7 +1,7 @@
-// frontend/public/components/dashboard/DriverProfileWC.js
+// frontend/public/components/dashboard/PassengerProfileWC.js
 import { api } from '../../services/api.js';
 
-class DriverProfileWC extends HTMLElement {
+class PassengerProfileWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -14,8 +14,7 @@ class DriverProfileWC extends HTMLElement {
     }
 
     disconnectedCallback() {
-        const form = this.shadowRoot.getElementById('profile-form');
-        if (form) form.removeEventListener('submit', this.handleSubmit);
+        this.removeEvents();
     }
 
     async loadProfile() {
@@ -23,8 +22,9 @@ class DriverProfileWC extends HTMLElement {
         if (res.success) {
             this.user = res.user;
             this.render();
+            this.addEvents();
         } else {
-            this.shadowRoot.innerHTML = `<p>Error al cargar el perfil: ${res.error}</p>`;
+            alert('Error al cargar perfil');
         }
     }
 
@@ -33,14 +33,15 @@ class DriverProfileWC extends HTMLElement {
 
         this.style.transition = 'opacity 0.3s ease-in-out';
         this.style.opacity = '0';
-        
+
         const styles = document.createElement('link');
         styles.rel = 'stylesheet';
-        styles.href = '/components/dashboard/css/driver-profile.css'; // Asegúrate de que este CSS exista
+        styles.href = '/components/dashboard/css/passenger-profile.css';
 
         styles.onload = () => {
-            this.style.opacity = '1'; 
+            this.style.opacity = '1';
         };
+
         const container = document.createElement('div');
         container.classList.add('profile-container');
 
@@ -50,62 +51,57 @@ class DriverProfileWC extends HTMLElement {
         const form = document.createElement('form');
         form.id = 'profile-form';
 
-        // --- Sección de Información Personal ---
+        // Información básica
         const basicSection = document.createElement('div');
         basicSection.classList.add('profile-section');
+
         const basicTitle = document.createElement('h3');
         basicTitle.textContent = 'Información Personal';
+
         const nameGroup = this.createFormGroup('Nombre', 'name', 'text', this.user.name);
         const emailGroup = this.createFormGroup('Email', 'email', 'email', this.user.email, true);
-        emailGroup.querySelector('.info-text').textContent = 'El email no se puede modificar.';
+        emailGroup.querySelector('.info-text').textContent = 'El email no se puede modificar';
+
         basicSection.append(basicTitle, nameGroup, emailGroup);
-        form.appendChild(basicSection);
 
-        // --- INICIO DE LA CORRECCIÓN ---
-        // Verificamos si el usuario tiene el rol de conductor y renderizamos su sección
-        if (this.user && this.user.roles.includes('conductor')) {
-            const conductorSection = document.createElement('div');
-            conductorSection.classList.add('profile-section');
+        // Información de pasajero
+        const passengerSection = document.createElement('div');
+        passengerSection.classList.add('profile-section');
 
-            const conductorTitle = document.createElement('h3');
-            conductorTitle.textContent = 'Datos del Conductor';
+        const passengerTitle = document.createElement('h3');
+        passengerTitle.textContent = 'Datos de Contacto';
 
-            // Campo Vehículo (Editable)
-            const vehiculoGroup = this.createFormGroup('Vehículo', 'vehiculo', 'text', this.user.vehiculo || '');
-            
-            // Campo Patente (Editable)
-            const patenteGroup = this.createFormGroup('Patente', 'patente', 'text', this.user.patente || '');
-            
-            // Campo Licencia (No editable)
-            const licenciaGroup = this.createFormGroup('Licencia', 'licencia', 'text', this.user.licencia || '', true);
-            licenciaGroup.querySelector('.info-text').textContent = 'La licencia no se puede modificar.';
+        const telefonoGroup = this.createFormGroup('Teléfono', 'telefono', 'tel', this.user.telefono || '');
+        const direccionGroup = this.createFormGroup('Dirección', 'direccion', 'text', this.user.direccion || '');
 
-            conductorSection.append(conductorTitle, vehiculoGroup, patenteGroup, licenciaGroup);
-            form.appendChild(conductorSection);
-        }
-        // --- FIN DE LA CORRECCIÓN ---
+        passengerSection.append(passengerTitle, telefonoGroup, direccionGroup);
 
-        // --- Sección de Contraseña ---
+        // Cambiar contraseña
         const passwordSection = document.createElement('div');
         passwordSection.classList.add('profile-section', 'password-section');
+
         const passwordTitle = document.createElement('h3');
         passwordTitle.textContent = 'Cambiar Contraseña';
+
         const currentPasswordGroup = this.createFormGroup('Contraseña Actual', 'currentPassword', 'password', '');
         const newPasswordGroup = this.createFormGroup('Nueva Contraseña', 'newPassword', 'password', '');
         const confirmPasswordGroup = this.createFormGroup('Confirmar Nueva Contraseña', 'confirmPassword', 'password', '');
+
         const passwordInfo = document.createElement('p');
         passwordInfo.classList.add('info-text');
-        passwordInfo.textContent = 'Deja estos campos vacíos si no deseas cambiar tu contraseña.';
-        passwordSection.append(passwordTitle, currentPasswordGroup, newPasswordGroup, confirmPasswordGroup, passwordInfo);
-        form.appendChild(passwordSection);
+        passwordInfo.textContent = 'Deja estos campos vacíos si no deseas cambiar tu contraseña';
 
-        // --- Botones ---
+        passwordSection.append(passwordTitle, currentPasswordGroup, newPasswordGroup, confirmPasswordGroup, passwordInfo);
+
+        // Botones
         const buttonGroup = document.createElement('div');
         buttonGroup.classList.add('button-group');
+
         const submitBtn = document.createElement('button');
         submitBtn.type = 'submit';
         submitBtn.textContent = 'Guardar Cambios';
         submitBtn.id = 'submit-btn';
+
         const backBtn = document.createElement('button');
         backBtn.type = 'button';
         backBtn.classList.add('back-btn');
@@ -114,55 +110,89 @@ class DriverProfileWC extends HTMLElement {
             window.history.pushState({}, '', '/dashboard');
             window.dispatchEvent(new Event('popstate'));
         });
-        buttonGroup.append(submitBtn, backBtn);
-        form.appendChild(buttonGroup);
 
+        buttonGroup.append(submitBtn, backBtn);
+
+        form.append(basicSection, passengerSection, passwordSection, buttonGroup);
         container.append(title, form);
         this.shadowRoot.append(styles, container);
-        form.addEventListener('submit', this.handleSubmit);
     }
 
     createFormGroup(labelText, name, type, value, disabled = false) {
         const group = document.createElement('div');
         group.classList.add('form-group');
+
         const label = document.createElement('label');
         label.textContent = labelText;
         label.setAttribute('for', name);
+
         const input = document.createElement('input');
         input.type = type;
         input.name = name;
         input.id = name;
         input.value = value;
         input.disabled = disabled;
+
         const infoText = document.createElement('p');
         infoText.classList.add('info-text');
+
         group.append(label, input, infoText);
         return group;
     }
 
+    addEvents() {
+        const form = this.shadowRoot.getElementById('profile-form');
+        if (form) {
+            form.addEventListener('submit', this.handleSubmit);
+        }
+    }
+
+    removeEvents() {
+        const form = this.shadowRoot.getElementById('profile-form');
+        if (form) {
+            form.removeEventListener('submit', this.handleSubmit);
+        }
+    }
+
     async handleSubmit(e) {
         e.preventDefault();
+
         const form = e.currentTarget;
         const submitBtn = this.shadowRoot.getElementById('submit-btn');
 
+        const name = form.name.value;
+        const telefono = form.telefono.value;
+        const direccion = form.direccion.value;
+        const currentPassword = form.currentPassword.value;
         const newPassword = form.newPassword.value;
         const confirmPassword = form.confirmPassword.value;
-        if (newPassword !== confirmPassword) {
-            this.showAlert('Las contraseñas nuevas no coinciden', 'error');
-            return;
+
+        // Validar contraseñas
+        if (newPassword || confirmPassword) {
+            if (!currentPassword) {
+                this.showAlert('Debes ingresar tu contraseña actual', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                this.showAlert('Las contraseñas nuevas no coinciden', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                this.showAlert('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+                return;
+            }
         }
 
         const data = {
-            name: form.name.value,
+            name,
+            telefono,
+            direccion
         };
 
-        if (this.user.roles.includes('conductor')) {
-            data.vehiculo = form.vehiculo.value;
-            data.patente = form.patente.value;
-        }
-
         if (newPassword) {
-            data.currentPassword = form.currentPassword.value;
+            data.currentPassword = currentPassword;
             data.newPassword = newPassword;
         }
 
@@ -176,25 +206,48 @@ class DriverProfileWC extends HTMLElement {
 
         if (res.success) {
             this.showAlert('Perfil actualizado correctamente', 'success');
-            setTimeout(() => this.loadProfile(), 2000);
+            // Limpiar campos de contraseña
+            form.currentPassword.value = '';
+            form.newPassword.value = '';
+            form.confirmPassword.value = '';
+            
+            // Recargar perfil
+            setTimeout(() => {
+                this.loadProfile();
+            }, 2000);
         } else {
             this.showAlert(res.error || 'Error al actualizar perfil', 'error');
         }
     }
 
     showAlert(message, type) {
+        // Eliminar alertas anteriores
         const existingAlert = this.shadowRoot.querySelector('.alert');
-        if (existingAlert) existingAlert.remove();
+        if (existingAlert) {
+            existingAlert.remove();
+        }
 
         const alert = document.createElement('div');
-        alert.className = `alert alert-${type}`;
+        alert.classList.add('alert', `alert-${type}`);
         alert.textContent = message;
 
         const container = this.shadowRoot.querySelector('.profile-container');
-        container.insertBefore(alert, container.children[1]);
+        const title = container.querySelector('h2');
+        container.insertBefore(alert, title.nextSibling);
 
-        setTimeout(() => alert.remove(), 5000);
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            alert.remove();
+        }, 5000);
+    }
+
+    set data(user) {
+        this.user = user;
+        if (this.isConnected) {
+            this.render();
+            this.addEvents();
+        }
     }
 }
 
-customElements.define('driver-profile-wc', DriverProfileWC);
+customElements.define('passenger-profile-wc', PassengerProfileWC);

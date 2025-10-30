@@ -1,0 +1,103 @@
+.requests-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+h2 {
+    color: #37474f;
+    font-size: 2rem;
+    margin-bottom: 30px;
+    border-bottom: 3px solid #4db6ac;
+    padding-bottom: 15px;
+}
+
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.request-card {
+    padding: 25px;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    background: #f8f9fa;
+    transition: 0.3s;
+}
+
+.request-card:hover {
+    border-color: #4db6ac;
+    box-shadow: 0 4px 12px rgba(77, 182, 172, 0.15);
+}
+
+.request-card h3 {
+    color: #37474f;
+    margin: 0 0 10px 0;
+    font-size: 1.2rem;
+}
+
+.request-card p {
+    color: #90a4ae;
+    margin: 5px 0;
+}
+
+.request-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.request-actions button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.request-actions button:first-child {
+    background: #4db6ac;
+    color: white;
+}
+
+.request-actions button:first-child:hover {
+    background: #00897b;
+    transform: translateY(-2px);
+}
+
+.request-actions button:last-child {
+    background: #ff6b5a;
+    color: white;
+}
+
+.request-actions button:last-child:hover {
+    background: #e64a3b;
+    transform: translateY(-2px);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #90a4ae;
+}
+
+.back-btn {
+    margin-top: 30px;
+    padding: 12px 20px;
+    background: #90a4ae;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.back-btn:hover {
+    background: #607d8b;
+    transform: translateY(-2px);
+}

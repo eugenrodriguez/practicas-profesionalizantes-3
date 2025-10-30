@@ -1,3 +1,4 @@
+//frontend/public/components/register/RegisterChoiceWC.js
 class RegisterChoiceWC extends HTMLElement {
     constructor() {
         super();
@@ -18,9 +19,17 @@ class RegisterChoiceWC extends HTMLElement {
     render() {
         this.shadowRoot.innerHTML = '';
 
+        this.style.transition = 'opacity 0.3s ease-in-out';
+        this.style.opacity = '0';
+
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = '/components/register/register.css';
+
+        link.onload = () => {
+        // Cuando el CSS esta cargado completamente, mostramos el componente.
+            this.style.opacity = '1'; 
+        };
 
         const container = document.createElement('div');
         container.classList.add('container');
@@ -37,7 +46,7 @@ class RegisterChoiceWC extends HTMLElement {
 
         const driverBtn = document.createElement('button');
         driverBtn.id = 'driver-btn';
-        driverBtn.textContent = 'Conductor';
+        driverBtn.textContent = 'Driver';
 
         container.append(title, desc, passengerBtn, driverBtn);
         this.shadowRoot.append(link, container);
@@ -68,4 +77,4 @@ class RegisterChoiceWC extends HTMLElement {
     }
 }
 
-customElements.define('register-choice', RegisterChoiceWC);
+customElements.define('register-choice-wc', RegisterChoiceWC);

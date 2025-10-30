@@ -1,3 +1,16 @@
+login-form-wc,
+driver-register-wc,
+passenger-register-wc,
+register-choice-wc,
+create-trip-wc,
+driver-profile-wc,
+trip-requests-wc,
+my-trips-wc {
+    /* Inicialmente ocultamos el componente hasta que el CSS se haya cargado */
+    opacity: 0; 
+    display: block;
+}
+
 body {
     margin: 0;
     padding: 0;

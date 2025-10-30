@@ -1,235 +1,105 @@
-import './TripRequestsWC.js';
-import './CreateTripWC.js';
-import './DriverProfileWC.js';
-import { api } from '../../services/api.js';
+// frontend/public/components/dashboard/DashboardWC.js
+import './DriverPanelWC.js'; // Importamos el panel
+import './PassengerPanelWC.js'; // Importamos el panel
 import '../logout/LogoutButtonWC.js';
 
 class DashboardWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.user = null;
-        this.trips = [];
+        this._user = null;
+    }
+    
+    set user(userData) {
+        this._user = userData;
+        if (this.isConnected) {
+            this.render();
+        }
+    }
+
+    get user() {
+        return this._user;
     }
 
     connectedCallback() {
         if (this.user) {
-            this.loadDashboardData();
+            this.render();
         }
-    }
-
-    set data(user) {
-        this.user = user;
-        if (this.isConnected) {
-            this.loadDashboardData();
-        }
-    }
-
-    async loadDashboardData() {
-        try {
-            const tripsRes = await api.getUserTrips();
-            if (tripsRes.success) {
-                this.trips = tripsRes.trips || [];
-            }
-        } catch (err) {
-            console.error('Error cargando datos del dashboard:', err);
-        }
-
-        this.render();
     }
 
     render() {
         this.shadowRoot.innerHTML = '';
 
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = '/components/dashboard/dashboard.css';
+        this.style.transition = 'opacity 0.3s ease-in-out';
+        this.style.opacity = '0';
 
+        const styles = document.createElement('link');
+        styles.rel = 'stylesheet';
+        styles.href = '/components/dashboard/css/dashboard.css';
+        styles.onload = () => { this.style.opacity = '1'; };
+        
         const container = document.createElement('div');
         container.classList.add('dashboard-container');
-
-        const header = this.createHeader();
-        const panel = this.createPanel();
-        const footer = this.createFooter();
-
-        container.append(header, panel, footer);
-        this.shadowRoot.append(link, container);
+        
+        container.append(this.createHeader(), this.createPanel(), this.createFooter());
+        this.shadowRoot.append(styles, container);
     }
 
     createHeader() {
         const header = document.createElement('div');
         header.classList.add('dashboard-header');
-
         const title = document.createElement('h1');
         title.textContent = `¡Bienvenido, ${this.user.name}!`;
-
         const roleInfo = document.createElement('p');
         roleInfo.classList.add('role-info');
-
         const rolesText = this.user.roles.map(role => role.charAt(0).toUpperCase() + role.slice(1)).join(' y ');
         roleInfo.textContent = `Roles: ${rolesText}`;
-
         header.append(title, roleInfo);
         return header;
     }
 
+    // Este es el método clave que decide qué paneles mostrar
     createPanel() {
         const panel = document.createElement('div');
         panel.classList.add('panel');
 
-        if (this.user.roles.includes('conductor')) {
-            const conductorSection = this.createConductorSection();
-            panel.appendChild(conductorSection);
-        }
+        const roles = this.user.roles;
+        const currentRole = sessionStorage.getItem('currentRole');
 
-        if (this.user.roles.includes('pasajero')) {
-            const passengerSection = this.createPassengerSection();
-            panel.appendChild(passengerSection);
+        // Si el usuario tiene ambos roles, mostramos el que eligió
+        if (roles.includes('conductor') && roles.includes('pasajero')) {
+            if (currentRole === 'conductor') {
+                panel.appendChild(document.createElement('driver-panel-wc'));
+            } else {
+                panel.appendChild(document.createElement('passenger-panel-wc'));
+            }
+        } 
+        // Si solo tiene un rol, mostramos el panel correspondiente
+        else if (roles.includes('conductor')) {
+            panel.appendChild(document.createElement('driver-panel-wc'));
+        } else if (roles.includes('pasajero')) {
+            panel.appendChild(document.createElement('passenger-panel-wc'));
         }
 
         return panel;
     }
 
-    createConductorSection() {
-        const section = document.createElement('div');
-        section.classList.add('role-section');
-
-        const title = document.createElement('h2');
-        title.textContent = 'Panel de Conductor';
-
-        const stats = this.createStats();
-
-        // Mostrar viajes si existen
-        if (this.trips.length > 0) {
-            const tripsList = document.createElement('ul');
-            tripsList.classList.add('trip-list');
-            this.trips.forEach(t => {
-                const li = document.createElement('li');
-                li.textContent = `Destino: ${t.destino || 'Sin destino'} (${t.pasajeros || 0} pasajeros)`;
-                tripsList.appendChild(li);
-            });
-            section.appendChild(tripsList);
-        }
-
-        const actions = document.createElement('div');
-        actions.classList.add('actions-grid');
-
-        const createTripBtn = this.createActionButton('Crear Viaje', 'create-trip');
-        const myTripsBtn = this.createActionButton('Mis Viajes', 'my-trips');
-        const requestsBtn = this.createActionButton('Solicitudes', 'passenger-requests');
-        const profileBtn = this.createActionButton('Mi Perfil', 'conductor-profile');
-
-        actions.append(createTripBtn, myTripsBtn, requestsBtn, profileBtn);
-
-        section.append(title, stats, actions);
-        return section;
-    }
-
-    createPassengerSection() {
-        const section = document.createElement('div');
-        section.classList.add('role-section');
-
-        const title = document.createElement('h2');
-        title.textContent = 'Panel de Pasajero';
-
-        const stats = this.createStats();
-
-        const actions = document.createElement('div');
-        actions.classList.add('actions-grid');
-
-        const searchTripBtn = this.createActionButton('Buscar Viaje', 'search-trip');
-        const bookingsBtn = this.createActionButton('Mis Reservas', 'my-bookings');
-        const favoritesBtn = this.createActionButton('Favoritos', 'favorite-drivers');
-        const profileBtn = this.createActionButton('Mi Perfil', 'passenger-profile');
-
-        actions.append(searchTripBtn, bookingsBtn, favoritesBtn, profileBtn);
-
-        section.append(title, stats, actions);
-        return section;
-    }
-
-    createStats() {
-        const statsContainer = document.createElement('div');
-        statsContainer.classList.add('stats-container');
-
-        const stat1 = this.createStatCard('Viajes', this.trips.length.toString());
-        const stat2 = this.createStatCard('Calificación', '5.0');
-        const stat3 = this.createStatCard('Activos', this.trips.length > 0 ? 'Sí' : 'No');
-
-        statsContainer.append(stat1, stat2, stat3);
-        return statsContainer;
-    }
-
-    createStatCard(label, value) {
-        const card = document.createElement('div');
-        card.classList.add('stat-card');
-
-        const valueEl = document.createElement('div');
-        valueEl.classList.add('stat-value');
-        valueEl.textContent = value;
-
-        const labelEl = document.createElement('div');
-        labelEl.classList.add('stat-label');
-        labelEl.textContent = label;
-
-        card.append(valueEl, labelEl);
-        return card;
-    }
-
-    createActionButton(text, id) {
-        const button = document.createElement('button');
-        button.classList.add('action-button');
-        button.id = id;
-        button.textContent = text;
-
-        button.addEventListener('click', () => this.handleAction(id));
-        return button;
-    }
-
-    createActionButton(text, id) {
-        const button = document.createElement('button');
-        button.classList.add('action-button');
-        button.id = id;
-        button.textContent = text;
-
-        button.addEventListener('click', () => {
-            switch (id) {
-                case 'create-trip':
-                    window.history.pushState({}, '', '/dashboard/create-trip');
-                    break;
-                case 'my-trips':
-                    window.history.pushState({}, '', '/dashboard/my-trips');
-                    break;
-                case 'passenger-requests':
-                    // para conductor: abrir vista general de viajes o elegir viaje -> aquí redirjo a mis viajes
-                    window.history.pushState({}, '', '/dashboard/my-trips');
-                    break;
-                case 'conductor-profile':
-                    window.history.pushState({}, '', '/dashboard/profile');
-                    break;
-                case 'search-trip':
-                    // pasajero -> aún no implementado; podrías crear ruta similar
-                    window.history.pushState({}, '', '/dashboard/my-trips');
-                    break;
-                case 'my-bookings':
-                    window.history.pushState({}, '', '/dashboard/my-trips');
-                    break;
-                case 'favorite-drivers':
-                    window.history.pushState({}, '', '/dashboard/my-trips');
-                    break;
-                case 'passenger-profile':
-                    window.history.pushState({}, '', '/dashboard/profile');
-                    break;
-            }
-            window.dispatchEvent(new Event('popstate'));
-        });
-
-        return button;
-    }
-
     createFooter() {
         const footer = document.createElement('div');
         footer.classList.add('dashboard-footer');
+        
+        // Si el usuario tiene ambos roles, mostramos el botón de cambio
+        if (this.user.roles.includes('conductor') && this.user.roles.includes('pasajero')) {
+            const switchBtn = document.createElement('button');
+            switchBtn.textContent = 'Cambiar de Rol';
+            switchBtn.classList.add('action-button');
+            switchBtn.style.marginRight = '20px';
+            switchBtn.addEventListener('click', () => {
+                sessionStorage.removeItem('currentRole'); // Limpiamos la selección
+                window.location.href = '/dashboard'; // Recargamos para ver la pantalla de selección
+            });
+            footer.appendChild(switchBtn);
+        }
 
         const logoutBtn = document.createElement('logout-button-wc');
         footer.appendChild(logoutBtn);
@@ -237,4 +107,4 @@ class DashboardWC extends HTMLElement {
     }
 }
 
-customElements.define('dashboard-view', DashboardWC);
+customElements.define('dashboard-wc', DashboardWC);

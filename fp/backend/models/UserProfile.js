@@ -1,3 +1,4 @@
+//backend/models/UserProfile.js:
 import { db } from '../config/db.js';
 import bcrypt from 'bcryptjs';
 
@@ -37,7 +38,7 @@ class UserProfile {
     }
 
     async update(userId, data) {
-        const { name, currentPassword, newPassword, vehiculo, patente, roles } = data;
+        const { name, currentPassword, newPassword, vehiculo, patente, telefono, direccion, roles } = data;
 
         if (newPassword) {
             const fullUserData = await db.query('SELECT password FROM users WHERE id = ?', [userId]);
@@ -49,38 +50,58 @@ class UserProfile {
             if (!isValid) {
                 const err = new Error('Contraseña actual incorrecta');
                 err.code = 'INVALID_PASSWORD';
-                throw err;
+            throw err;
             }
 
             const hashedPassword = await bcrypt.hash(newPassword, 8);
-            await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
-        }
-
-        if (name) {
-            await db.query('UPDATE users SET name = ? WHERE id = ?', [name, userId]);
-        }
-
-        if (roles && roles.includes('conductor')) {
-            const updates = [];
-            const values = [];
-
-            if (vehiculo !== undefined) {
-                updates.push('vehiculo = ?');
-                values.push(vehiculo);
-            }
-            if (patente !== undefined) {
-                updates.push('patente = ?');
-                values.push(patente);
+                await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
             }
 
-            if (updates.length > 0) {
-                values.push(userId);
-                await db.query(`UPDATE conductores SET ${updates.join(', ')} WHERE id = ?`, values);
+            if (name) {
+                await db.query('UPDATE users SET name = ? WHERE id = ?', [name, userId]);
             }
+
+            if (roles && roles.includes('conductor')) {
+                const updates = [];
+                const values = [];
+
+                if (vehiculo !== undefined) {
+                    updates.push('vehiculo = ?');
+                    values.push(vehiculo);
+                }
+                if (patente !== undefined) {
+                    updates.push('patente = ?');
+                    values.push(patente);
+                }
+
+                if (updates.length > 0) {
+                    values.push(userId);
+                    await db.query(`UPDATE conductores SET ${updates.join(', ')} WHERE id = ?`, values);
+                }
+            }
+
+            if (roles && roles.includes('pasajero')) {
+                const updates = [];
+                const values = [];
+
+                if (telefono !== undefined) {
+                    updates.push('telefono = ?');
+                    values.push(telefono);
+                }
+                if (direccion !== undefined) {
+                    updates.push('direccion = ?');
+                    values.push(direccion);
+                }
+
+                if (updates.length > 0) {
+                    values.push(userId);
+                    await db.query(`UPDATE pasajeros SET ${updates.join(', ')} WHERE id = ?`, values);
+                }
+            }
+
+            return true;
         }
 
-        return true;
-    }
 }
 
 export default new UserProfile();

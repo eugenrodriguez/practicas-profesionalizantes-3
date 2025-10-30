@@ -1,3 +1,4 @@
+//frontend/public/components/register/DriverRegisterWC.js:
 import { api } from '../../services/api.js';
 
 class DriverRegisterWC extends HTMLElement {
@@ -19,15 +20,23 @@ class DriverRegisterWC extends HTMLElement {
     render() {
         this.shadowRoot.innerHTML = '';
 
+        this.style.transition = 'opacity 0.3s ease-in-out';
+        this.style.opacity = '0';
+
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = '/components/register/register.css';
+
+        link.onload = () => {
+        // Cuando el CSS esta cargado completamente, mostramos el componente.
+            this.style.opacity = '1'; 
+        };
 
         const container = document.createElement('div');
         container.classList.add('form-container');
 
         const title = document.createElement('h1');
-        title.textContent = 'Registro Conductor';
+        title.textContent = 'Registro Driver';
 
         const form = document.createElement('form');
         form.id = 'driver-register-form';
@@ -142,4 +151,4 @@ class DriverRegisterWC extends HTMLElement {
     }
 }
 
-customElements.define('driver-register', DriverRegisterWC);
+customElements.define('driver-register-wc', DriverRegisterWC);

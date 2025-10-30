@@ -1,10 +1,10 @@
 :host {
     --color-bg: #f8f9fa;
     --color-card: #ffffff;
-    --color-primary: #4db6ac;   /* aqua green */
+    --color-primary: #4db6ac;   
     --color-primary-dark: #00897b;
     --color-primary-light: #80cbc4;
-    --color-accent: #ff6b5a;    /* coral */
+    --color-accent: #ff6b5a;  
     --color-accent-light: #ffab9c;
     --color-text: #37474f;
     --color-text-light: #90a4ae;
@@ -205,4 +205,32 @@
         padding: 15px;
         width: 100%;
     }
+}
+
+.stats-container.passenger-stats {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.next-trip-card .stat-value {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.next-trip-card .route {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.next-trip-card .date {
+    color: #00796b; 
+    font-weight: 500;
+}
+
+.next-trip-card .driver {
+    font-size: 0.9rem;
+    color: #555;
 }

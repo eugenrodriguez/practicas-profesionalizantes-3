@@ -1,0 +1,156 @@
+.my-trips-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+h2 {
+    color: #37474f;
+    font-size: 2rem;
+    margin-bottom: 30px;
+    border-bottom: 3px solid #4db6ac;
+    padding-bottom: 15px;
+}
+
+.trips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.trip-card {
+    padding: 25px;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    transition: 0.3s;
+    background: #f8f9fa;
+}
+
+.trip-card:hover {
+    border-color: #4db6ac;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(77, 182, 172, 0.15);
+}
+
+.trip-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #37474f;
+    margin-bottom: 10px;
+}
+
+.trip-meta {
+    color: #90a4ae;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+
+.trip-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.trip-actions button {
+    padding: 12px 20px;
+    background: #4db6ac;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.trip-actions button:hover {
+    background: #00897b;
+    transform: translateY(-2px);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #90a4ae;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.back-btn {
+    margin-top: 30px;
+    padding: 12px 20px;
+    background: #90a4ae;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.back-btn:hover {
+    background: #607d8b;
+    transform: translateY(-2px);
+}
+
+
+.trip-actions .publish-btn {
+    background-color: #4CAF50; 
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.trip-actions .publish-btn:hover {
+    background-color: #45a049;
+}
+
+.trip-actions .publish-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.trip-card.status-pendiente {
+    border-left: 5px solid #ff9800; 
+}
+
+.trip-card.status-activo {
+    border-left: 5px solid #4CAF50; 
+}
+
+.trip-card.status-completado {
+    border-left: 5px solid #2196F3; 
+    opacity: 0.7;
+}
+
+.trip-card.status-cancelado {
+    border-left: 5px solid #f44336;
+    opacity: 0.6;
+}
+
+.status-text {
+    font-weight: bold;
+}
+
+.live-btn {
+  background-color: #00796b; 
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.live-btn:hover {
+  background-color: #004d40;
+}

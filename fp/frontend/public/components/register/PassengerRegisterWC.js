@@ -1,3 +1,4 @@
+//frontend/public/components/register/PassengerRegisterWC.js:
 import { api } from '../../services/api.js';
 
 class PassengerRegisterWC extends HTMLElement {
@@ -19,9 +20,17 @@ class PassengerRegisterWC extends HTMLElement {
     render() {
         this.shadowRoot.innerHTML = '';
 
+        this.style.transition = 'opacity 0.3s ease-in-out';
+        this.style.opacity = '0';
+
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = '/components/register/register.css';
+
+        link.onload = () => {
+        // Cuando el CSS esta cargado completamente, mostramos el componente.
+            this.style.opacity = '1'; 
+        };
 
         const container = document.createElement('div');
         container.classList.add('form-container');
@@ -133,4 +142,4 @@ class PassengerRegisterWC extends HTMLElement {
     }
 }
 
-customElements.define('passenger-register', PassengerRegisterWC);
+customElements.define('passenger-register-wc', PassengerRegisterWC);

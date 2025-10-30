@@ -1,98 +1,144 @@
+// frontend/public/components/dashboard/TripRequestsWC.js
 import { api } from '../../services/api.js';
 
 class TripRequestsWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.tripId = null;
+        this.tripId = null; // Puede ser null si vemos todas las solicitudes
         this.requests = [];
+        this.mode = 'single'; // 'single' para un viaje, 'all' para todas
     }
 
     connectedCallback() {
-        // obtener tripId de query param
         const params = new URLSearchParams(window.location.search);
         this.tripId = params.get('trip');
+        this.mode = this.tripId ? 'single' : 'all'; // Determinamos el modo de operación
         this.load();
     }
 
     async load() {
         this.shadowRoot.innerHTML = '';
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = '/components/dashboard/dashboard.css';
-        this.shadowRoot.appendChild(link);
+
+        this.style.transition = 'opacity 0.3s ease-in-out';
+        this.style.opacity = '0';
+
+        const styles = document.createElement('link');
+        styles.rel = 'stylesheet';
+        // --- CAMBIO 1: Volvemos a usar los estilos originales ---
+        styles.href = '/components/dashboard/css/trip-requests.css';
+
+        styles.onload = () => { this.style.opacity = '1'; };
+
+        const container = document.createElement('div');
+        // --- CAMBIO 2: Usamos la clase CSS original ---
+        container.classList.add('requests-container'); 
 
         const title = document.createElement('h2');
-        title.textContent = 'Solicitudes';
-        this.shadowRoot.appendChild(title);
+        title.textContent = this.mode === 'single' ? 'Solicitudes del Viaje' : 'Todas mis Solicitudes';
 
-        if (!this.tripId) {
-            const p = document.createElement('p');
-            p.textContent = 'ID de viaje no especificado.';
-            this.shadowRoot.appendChild(p);
-            return;
-        }
+        const apiCall = this.mode === 'single' 
+            ? api.getTripRequests(this.tripId) 
+            : api.getAllDriverRequests();
 
-        const res = await api.getTripRequests(this.tripId);
+        const res = await apiCall;
+
         if (!res.success) {
-            const p = document.createElement('p');
-            p.textContent = res.error || 'Error al cargar solicitudes';
-            this.shadowRoot.appendChild(p);
+            const error = document.createElement('p');
+            error.textContent = res.error || 'Error al cargar solicitudes';
+            container.append(title, error);
+            this.shadowRoot.append(styles, container);
             return;
         }
 
         this.requests = res.requests || [];
 
-        if (this.requests.length === 0) {
-            const p = document.createElement('p');
-            p.textContent = 'No hay solicitudes aún.';
-            this.shadowRoot.appendChild(p);
-            return;
-        }
-
         const list = document.createElement('div');
         list.classList.add('requests-list');
 
-        this.requests.forEach(r => {
+        if (this.requests.length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.classList.add('empty-state');
+            emptyState.textContent = 'No hay solicitudes para mostrar.';
+            list.appendChild(emptyState);
+        } else {
+            this.renderRequests(this.requests, list);
+        }
+
+        const backBtn = document.createElement('button');
+        backBtn.classList.add('back-btn');
+        backBtn.textContent = this.mode === 'single' ? '← Volver a Mis Viajes' : '← Volver al Dashboard';
+        backBtn.addEventListener('click', () => {
+            const path = this.mode === 'single' ? '/dashboard/my-trips' : '/dashboard';
+            window.history.pushState({}, '', path);
+            window.dispatchEvent(new Event('popstate'));
+        });
+
+        container.append(title, list, backBtn);
+        this.shadowRoot.append(styles, container);
+    }
+
+    renderRequests(requests, container) {
+        requests.forEach(r => {
             const card = document.createElement('div');
             card.classList.add('request-card');
 
-            const name = document.createElement('div');
+            if (this.mode === 'all') {
+                const tripTitle = document.createElement('h4');
+                tripTitle.textContent = `Viaje: ${r.origen} → ${r.destino}`;
+                tripTitle.style.borderBottom = '1px solid #eee';
+                tripTitle.style.paddingBottom = '8px';
+                tripTitle.style.marginBottom = '10px';
+                card.appendChild(tripTitle);
+            }
+
+            const name = document.createElement('h3');
             name.textContent = r.pasajero_name;
 
-            const meta = document.createElement('div');
-            meta.textContent = `${r.telefono || ''} • solicitado: ${new Date(r.requested_at).toLocaleString()}`;
+            const createDetailLine = (label, value) => {
+                const p = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = `${label}: `;
+                p.append(strong, value);
+                return p;
+            };
+
+            const details = document.createElement('div');
+            details.append(
+                createDetailLine('👥 Asientos solicitados', r.asientos_solicitados),
+                createDetailLine('📝 Solicitado', new Date(r.requested_at).toLocaleString('es-AR')),
+                createDetailLine('🚦 Estado', r.estado)
+            );
 
             const actions = document.createElement('div');
             actions.classList.add('request-actions');
 
-            const accept = document.createElement('button');
-            accept.textContent = 'Aceptar';
-            accept.addEventListener('click', async () => {
-                const res = await api.respondRequest(r.id, 'aceptar');
-                if (res.success) {
-                    alert('Solicitud aceptada');
-                    this.load();
-                } else alert(res.error || 'Error');
-            });
+            if (r.estado === 'pendiente') {
+                const accept = document.createElement('button');
+                accept.textContent = 'Aceptar';
+                accept.addEventListener('click', () => this.handleResponse(r.id, 'aceptar'));
 
-            const reject = document.createElement('button');
-            reject.textContent = 'Rechazar';
-            reject.addEventListener('click', async () => {
-                const res = await api.respondRequest(r.id, 'rechazar');
-                if (res.success) {
-                    alert('Solicitud rechazada');
-                    this.load();
-                } else alert(res.error || 'Error');
-            });
+                const reject = document.createElement('button');
+                reject.textContent = 'Rechazar';
+                reject.addEventListener('click', () => this.handleResponse(r.id, 'rechazar'));
+                
+                actions.append(accept, reject);
+            }
 
-            actions.append(accept, reject);
-            card.append(name, meta, actions);
-            list.appendChild(card);
+            card.append(name, details, actions);
+            container.appendChild(card);
         });
+    }
 
-        this.shadowRoot.appendChild(list);
+    async handleResponse(requestId, action) {
+        const res = await api.respondRequest(requestId, action);
+        if (res.success) {
+            alert(`Solicitud ${action === 'aceptar' ? 'aceptada' : 'rechazada'}.`);
+            this.load();
+        } else {
+            alert(res.error || 'Error al procesar la solicitud.');
+        }
     }
 }
 
-customElements.define('trip-requests', TripRequestsWC);
+customElements.define('trip-requests-wc', TripRequestsWC);
