@@ -113,7 +113,11 @@ export async function passengerRegister(req, res) {
         const newUser = await User.findUserByEmail(email);
         return _loginUser(res, newUser, null, 'Registro de pasajero exitoso');
     } catch (error) {
-        // ... (manejo de errores se mantiene igual)
+        if (error.code === 'DUP_EMAIL') {
+            return res.status(400).json({ error: 'El email ya está registrado' });
+        }
+        console.error("Error al registrar pasajero:", error);
+        return res.status(500).json({ error: 'Error interno del servidor al registrar pasajero' });
     }
 }
 
