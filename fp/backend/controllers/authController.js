@@ -116,8 +116,8 @@ export async function passengerRegister(req, res) {
         if (error.code === 'DUP_EMAIL') {
             return res.status(400).json({ error: 'El email ya está registrado' });
         }
-        console.error("Error al registrar pasajero:", error);
-        return res.status(500).json({ error: 'Error interno del servidor al registrar pasajero' });
+        console.error("Error al registrar conductor:", error);
+        return res.status(500).json({ error: 'Error interno del servidor al registrar conductor' });
     }
 }
 

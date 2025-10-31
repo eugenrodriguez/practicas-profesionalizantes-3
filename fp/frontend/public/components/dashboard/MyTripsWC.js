@@ -242,8 +242,8 @@ class MyTripsWC extends HTMLElement {
                 btns.appendChild(deleteBtn);
                 break;
 
-            case 'activo' || 'en_curso':
-
+            case 'activo':
+            case 'en_curso':
                 const liveBtn = this.createButton('Ver', 'live-btn', () => {
                     window.history.pushState({}, '', `/dashboard/live-trip?id=${trip.id}`);
                     window.dispatchEvent(new Event('popstate'));
