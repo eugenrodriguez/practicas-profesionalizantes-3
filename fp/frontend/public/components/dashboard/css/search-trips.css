@@ -13,7 +13,6 @@
     text-align: center;
 }
 
-/* Formulario de búsqueda */
 .search-form {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -64,7 +63,6 @@
     background: #78909c;
 }
 
-/* Lista de viajes */
 .trips-list {
     display: grid;
     gap: 1.5rem;
@@ -169,7 +167,6 @@
     font-size: 1rem;
 }
 
-/* Botón volver */
 .back-btn {
     display: block;
     width: 100%;
@@ -191,7 +188,6 @@
     transform: translateY(-2px);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .search-trips-container {
         padding: 1rem;

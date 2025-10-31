@@ -61,7 +61,7 @@ class SearchTripsWC extends HTMLElement {
         fechaInput.placeholder = 'Fecha';
         const searchBtn = document.createElement('button');
         searchBtn.type = 'submit';
-        searchBtn.textContent = '🔍 Buscar';
+        searchBtn.textContent = 'Buscar';
         const clearBtn = document.createElement('button');
         clearBtn.type = 'button';
         clearBtn.textContent = 'Ver Todos';
@@ -83,7 +83,7 @@ class SearchTripsWC extends HTMLElement {
             
             // --- CAMBIO: Se usan createElement en lugar de innerHTML ---
             const emptyTitle = document.createElement('h3');
-            emptyTitle.textContent = '😔 No hay viajes disponibles';
+            emptyTitle.textContent = 'No hay viajes disponibles';
             const emptyText = document.createElement('p');
             emptyText.textContent = 'Intenta buscar con otros filtros o vuelve más tarde';
             emptyState.append(emptyTitle, emptyText);
@@ -143,18 +143,18 @@ class SearchTripsWC extends HTMLElement {
         };
         
         details.append(
-            createDetailLine('📅 Salida', fechaStr),
-            createDetailLine('👤 Conductor', trip.conductor_name),
-            createDetailLine('🚗 Vehículo', trip.vehiculo || 'No especificado'),
-            createDetailLine('🪪 Patente', trip.patente || 'No especificado'),
-            createDetailLine('💺 Asientos disponibles', trip.asientos_disponibles)
+            createDetailLine('Salida', fechaStr),
+            createDetailLine('Conductor', trip.conductor_name),
+            createDetailLine('Vehículo', trip.vehiculo || 'No especificado'),
+            createDetailLine('Patente', trip.patente || 'No especificado'),
+            createDetailLine('Asientos disponibles', trip.asientos_disponibles)
         );
 
         const actions = document.createElement('div');
         actions.classList.add('trip-actions');
 
         const requestBtn = document.createElement('button');
-        requestBtn.textContent = '✋ Solicitar Asiento';
+        requestBtn.textContent = 'Solicitar Asiento';
         requestBtn.classList.add('request-btn');
         requestBtn.dataset.tripId = trip.id;
 
@@ -223,12 +223,12 @@ class SearchTripsWC extends HTMLElement {
         const res = await api.requestSeat(tripId, seatsToBook);
 
         if (res.success) {
-            alert('✅ Solicitud enviada correctamente. El conductor la revisará pronto.');
+            alert('Solicitud enviada correctamente. El conductor la revisará pronto.');
             this.loadAvailableTrips();
         } else {
             alert(res.error || 'Error al solicitar asiento');
             e.target.disabled = false;
-            e.target.textContent = '✋ Solicitar Asiento';
+            e.target.textContent = 'Solicitar Asiento';
         }
     }
 }

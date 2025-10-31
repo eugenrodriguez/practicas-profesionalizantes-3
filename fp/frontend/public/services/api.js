@@ -67,10 +67,6 @@ export class ApiClient {
         return this.request('/trips/my', { method: 'GET' });
     }
 
-    async getUserTrips() {
-        return this.request('/trips/my', { method: 'GET' });
-    }
-
     async getTripRequests(tripId) {
         return this.request(`/trips/${tripId}/requests`, { method: 'GET' });
     }
@@ -87,6 +83,18 @@ export class ApiClient {
             method: 'PUT',
             body: JSON.stringify({ action })
         });
+    }
+
+    async deleteTrip(tripId) {
+        return this.request(`/trips/${tripId}`, { method: 'DELETE' });
+    }
+
+    async cancelTrip(tripId) {
+        return this.request(`/trips/${tripId}/cancel`, { method: 'PUT' });
+    }
+
+    async cancelBooking(requestId) {
+        return this.request(`/trips/requests/${requestId}/cancel`, { method: 'POST' });
     }
 
     // Profile
@@ -134,7 +142,17 @@ export class ApiClient {
     async getTripById(tripId) {
         return this.request(`/trips/${tripId}`);
     }
-    
+
+    async getPassengerCompletedTrips() {
+        return this.request('/trips/my-completed-bookings', { method: 'GET' });
+    }
+
+    async submitRating(viajeId, calificadoId, calificacion, comentario) {
+        return this.request('/ratings', {
+            method: 'POST',
+            body: JSON.stringify({ viajeId, calificadoId, calificacion, comentario })
+        });
+    }
 }
 
 export const api = new ApiClient();

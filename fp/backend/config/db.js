@@ -1,3 +1,4 @@
+//backend/config/db.js:
 import mysql from 'mysql';
 import path from 'path';
 import { fileURLToPath } from 'url';

@@ -16,6 +16,7 @@ dotenv.config({ path: './env/.env' });
 const app = express();
 const httpServer = http.createServer(app);
 const io = new Server(httpServer);
+let socketIoInstance = null;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,7 +28,8 @@ app.use(express.static(path.join(__dirname, '../frontend/public')));
 app.use('/api/v1', router);
 app.use('/', viewRouter);
 
-initializeSocket(io);
+socketIoInstance = initializeSocket(io);
+export const getSocketIo = () => socketIoInstance;
 
 const PORT = 4000;
 function startMessage() {

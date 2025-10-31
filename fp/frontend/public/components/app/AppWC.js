@@ -1,3 +1,4 @@
+//frontend/public/components/app/AppWC.js:
 import '../login/LoginFormWC.js';
 import '../register/RegisterChoiceWC.js';
 import '../register/DriverRegisterWC.js';

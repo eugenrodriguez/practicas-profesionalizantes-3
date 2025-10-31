@@ -1,5 +1,6 @@
 //backend/models/UserProfile.js:
 import { db } from '../config/db.js';
+import Rating from './Rating.js';
 import bcrypt from 'bcryptjs';
 
 class UserProfile {
@@ -33,6 +34,8 @@ class UserProfile {
             }
         }
         
+        user.calificacion_promedio = await Rating.getAverageForUser(userId);
+
         const { password, ...profile } = user;
         return profile;
     }

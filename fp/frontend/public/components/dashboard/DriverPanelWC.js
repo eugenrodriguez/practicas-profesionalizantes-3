@@ -5,6 +5,7 @@ class DriverPanelWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this.userProfile = null;
         this.driverTrips = [];
     }
 
@@ -14,10 +15,14 @@ class DriverPanelWC extends HTMLElement {
 
     async loadPanelData() {
         try {
-            const tripsRes = await api.getUserTrips();
-            if (tripsRes.success) {
-                this.driverTrips = tripsRes.trips || [];
-            }
+            const [tripsRes, profileRes] = await Promise.all([
+                api.getMyTrips(),
+                api.getProfile()
+            ]);
+
+            if (tripsRes.success) this.driverTrips = tripsRes.trips || [];
+            if (profileRes.success) this.userProfile = profileRes.user;
+
         } catch (err) {
             console.error('Error cargando datos del panel de conductor:', err);
         }
@@ -40,9 +45,11 @@ class DriverPanelWC extends HTMLElement {
         statsContainer.classList.add('stats-container');
         
         const pendingRequests = this.driverTrips.reduce((acc, trip) => acc + (trip.solicitudes_pendientes || 0), 0);
+        const avgRating = this.userProfile?.calificacion_promedio ? parseFloat(this.userProfile.calificacion_promedio).toFixed(2) : 'N/A';
+
         statsContainer.append(
             this.createStatCard('Viajes Creados', this.driverTrips.length),
-            this.createStatCard('Calificación', '4.9 ⭐'), 
+            this.createStatCard('Calificación', `${avgRating} `), 
             this.createStatCard('Solicitudes Pendientes', pendingRequests) 
         );
         

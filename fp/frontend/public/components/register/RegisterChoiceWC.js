@@ -46,7 +46,7 @@ class RegisterChoiceWC extends HTMLElement {
 
         const driverBtn = document.createElement('button');
         driverBtn.id = 'driver-btn';
-        driverBtn.textContent = 'Driver';
+        driverBtn.textContent = 'Conductor';
 
         container.append(title, desc, passengerBtn, driverBtn);
         this.shadowRoot.append(link, container);

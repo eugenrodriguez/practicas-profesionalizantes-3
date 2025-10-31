@@ -1,5 +1,6 @@
 //backend/controllers/tripController.js:
 import Trip from '../models/Trip.js';
+import { getSocketIo } from '../app.js';
 
 export class TripController {
     async createTrip(req, res) {
@@ -204,7 +205,7 @@ export class TripController {
     async getTripById(req, res) {
         try {
             const tripId = Number(req.params.id);
-            const trip = await Trip.getByIdWithDriver(tripId);
+            const trip = await Trip.getTripWithParticipants(tripId);
             
             if (!trip) {
                 return res.status(404).json({ success: false, error: 'Viaje no encontrado' });
@@ -213,6 +214,90 @@ export class TripController {
         } catch (error) {
             console.error('Error obteniendo viaje por ID:', error);
             return res.status(500).json({ success: false, error: 'Error interno del servidor' });
+        }
+    }
+
+    async deleteTrip(req, res) {
+        try {
+            const user = req.user;
+            const tripId = Number(req.params.id);
+
+            if (!user.roles.includes('conductor')) {
+                return res.status(403).json({ success: false, error: 'Acción no autorizada' });
+            }
+
+            const trip = await Trip.getById(tripId);
+            if (!trip) {
+                return res.status(404).json({ success: false, error: 'Viaje no encontrado' });
+            }
+            if (trip.conductor_id !== user.id) {
+                return res.status(403).json({ success: false, error: 'No eres el propietario de este viaje' });
+            }
+
+            if (trip.estado !== 'pendiente') {
+                return res.status(400).json({ success: false, error: 'Solo se pueden eliminar viajes que están pendientes de publicación.' });
+            }
+
+            await Trip.deleteById(tripId);
+            return res.json({ success: true, message: 'Viaje eliminado correctamente' });
+
+        } catch (error) {
+            console.error('Error eliminando viaje:', error);
+            return res.status(500).json({ success: false, error: 'Error interno al eliminar el viaje' });
+        }
+    }
+
+    async cancelTrip(req, res) {
+        try {
+            const user = req.user;
+            const tripId = Number(req.params.id);
+
+            if (!user.roles.includes('conductor')) {
+                return res.status(403).json({ success: false, error: 'Acción no autorizada' });
+            }
+
+            const trip = await Trip.getById(tripId);
+            if (!trip) {
+                return res.status(404).json({ success: false, error: 'Viaje no encontrado' });
+            }
+            if (trip.conductor_id !== user.id) {
+                return res.status(403).json({ success: false, error: 'No eres el propietario de este viaje' });
+            }
+
+            const passengerIds = await Trip.getAcceptedPassengerIds(tripId); 
+
+            await Trip.updateStatus(tripId, 'cancelado');
+
+            const io = getSocketIo();
+            if (io && passengerIds.length > 0) {
+                passengerIds.forEach(passengerId => {
+                    io.to(`user-${passengerId}`).emit('tripCancelled', { 
+                        tripId: trip.id,
+                        tripOrigin: trip.origen,
+                        tripDestination: trip.destino
+                    });
+                });
+            }
+
+            return res.json({ success: true, message: 'Viaje cancelado correctamente' });
+        } catch (error) {
+            console.error('Error cancelando viaje:', error);
+            return res.status(500).json({ success: false, error: 'Error interno al cancelar el viaje' });
+        }
+    }
+
+    async cancelBooking(req, res) {
+        try {
+            const user = req.user; 
+            const requestId = Number(req.params.id);
+
+            await Trip.cancelRequestById(requestId, user.id);
+
+            return res.json({ success: true, message: 'Reserva cancelada correctamente' });
+        } catch (error) {
+            console.error('Error cancelando reserva:', error);
+            if (error.code === 'UNAUTHORIZED') return res.status(403).json({ success: false, error: error.message });
+            return res.status(500).json({ success: false, error: 'Error interno al cancelar la reserva' });
         }
     }
 }

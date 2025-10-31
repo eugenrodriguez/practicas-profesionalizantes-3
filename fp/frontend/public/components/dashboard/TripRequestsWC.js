@@ -103,9 +103,9 @@ class TripRequestsWC extends HTMLElement {
 
             const details = document.createElement('div');
             details.append(
-                createDetailLine('👥 Asientos solicitados', r.asientos_solicitados),
-                createDetailLine('📝 Solicitado', new Date(r.requested_at).toLocaleString('es-AR')),
-                createDetailLine('🚦 Estado', r.estado)
+                createDetailLine('Asientos solicitados', r.asientos_solicitados),
+                createDetailLine('Solicitado', new Date(r.requested_at).toLocaleString('es-AR')),
+                createDetailLine('Estado', r.estado)
             );
 
             const actions = document.createElement('div');

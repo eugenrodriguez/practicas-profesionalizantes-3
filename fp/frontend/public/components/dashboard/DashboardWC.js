@@ -41,7 +41,10 @@ class DashboardWC extends HTMLElement {
         const container = document.createElement('div');
         container.classList.add('dashboard-container');
         
-        container.append(this.createHeader(), this.createPanel(), this.createFooter());
+        if (this.user) {
+            container.append(this.createHeader(), this.createPanel(), this.createFooter());
+        }
+        
         this.shadowRoot.append(styles, container);
     }
 
@@ -50,10 +53,22 @@ class DashboardWC extends HTMLElement {
         header.classList.add('dashboard-header');
         const title = document.createElement('h1');
         title.textContent = `¡Bienvenido, ${this.user.name}!`;
+
         const roleInfo = document.createElement('p');
         roleInfo.classList.add('role-info');
-        const rolesText = this.user.roles.map(role => role.charAt(0).toUpperCase() + role.slice(1)).join(' y ');
-        roleInfo.textContent = `Roles: ${rolesText}`;
+        
+        const savedRole = sessionStorage.getItem('currentRole');
+        const roles = this.user.roles;
+        let activeRoleText = '';
+
+        if (roles.length === 1) {
+            activeRoleText = `Rol: ${roles[0].charAt(0).toUpperCase() + roles[0].slice(1)}`;
+        } 
+        else if (roles.length > 1 && savedRole) {
+            activeRoleText = `Actuando como: ${savedRole.charAt(0).toUpperCase() + savedRole.slice(1)}`;
+        }
+        
+        roleInfo.textContent = activeRoleText;
         header.append(title, roleInfo);
         return header;
     }
@@ -63,21 +78,26 @@ class DashboardWC extends HTMLElement {
         panel.classList.add('panel');
 
         const roles = this.user.roles;
-        const currentRole = sessionStorage.getItem('currentRole');
+        let savedRole = sessionStorage.getItem('currentRole');
 
-        if (roles.includes('conductor') && roles.includes('pasajero')) {
-            if (currentRole === 'conductor') {
-                panel.appendChild(document.createElement('driver-panel-wc'));
-            } else {
-                panel.appendChild(document.createElement('passenger-panel-wc'));
-            }
-        } 
-        else if (roles.includes('conductor')) {
+
+        if (savedRole && !roles.includes(savedRole)) {
+            sessionStorage.removeItem('currentRole');
+            savedRole = null; 
+        }
+
+        let roleToDisplay = savedRole;
+        if (!roleToDisplay && roles.length === 1) {
+            roleToDisplay = roles[0];
+        }
+
+        if (roleToDisplay === 'conductor') {
             panel.appendChild(document.createElement('driver-panel-wc'));
-        } else if (roles.includes('pasajero')) {
+        } else if (roleToDisplay === 'pasajero') {
             panel.appendChild(document.createElement('passenger-panel-wc'));
         }
 
+        
         return panel;
     }
 

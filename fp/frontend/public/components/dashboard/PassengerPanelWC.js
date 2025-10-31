@@ -5,6 +5,7 @@ class PassengerPanelWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this.userProfile = null;
         this.passengerBookings = [];
     }
 
@@ -14,10 +15,14 @@ class PassengerPanelWC extends HTMLElement {
 
     async loadPanelData() {
         try {
-            const bookingsRes = await api.getMyRequests();
-            if (bookingsRes.success) {
-                this.passengerBookings = bookingsRes.requests || [];
-            }
+            const [bookingsRes, profileRes] = await Promise.all([
+                api.getMyRequests(),
+                api.getProfile()
+            ]);
+
+            if (bookingsRes.success) this.passengerBookings = bookingsRes.requests || [];
+            if (profileRes.success) this.userProfile = profileRes.user;
+
         } catch (err) {
             console.error('Error cargando datos del panel de pasajero:', err);
         }
@@ -39,8 +44,10 @@ class PassengerPanelWC extends HTMLElement {
         const statsContainer = document.createElement('div');
         statsContainer.classList.add('stats-container', 'passenger-stats');
 
+        const avgRating = this.userProfile?.calificacion_promedio ? parseFloat(this.userProfile.calificacion_promedio).toFixed(2) : 'N/A';
+
         statsContainer.append(
-            this.createStatCard('Tu Calificación', '4.85 ⭐'),
+            this.createStatCard('Tu Calificación', `${avgRating} `),
             this.createNextTripCard(),
             this.createHistoryCard()
         );
@@ -72,14 +79,20 @@ class PassengerPanelWC extends HTMLElement {
             const fecha = new Date(nextTrip.fecha_salida);
             const fechaStr = fecha.toLocaleString('es-AR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
             
-
+            const routeSpan = document.createElement('span');
+            routeSpan.className = 'route';
+            routeSpan.textContent = `${nextTrip.origen} → ${nextTrip.destino}`;
 
             const dateSpan = document.createElement('span');
             dateSpan.className = 'date';
             dateSpan.textContent = fechaStr;
+            
+            const driverSpan = document.createElement('span');
+            driverSpan.className = 'driver';
+            driverSpan.textContent = `Conductor: ${nextTrip.conductor_name}`;
 
             valueEl.innerHTML = ''; 
-            valueEl.append(dateSpan);
+            valueEl.append(routeSpan, dateSpan, driverSpan);
 
         } else {
             valueEl.textContent = 'No tienes viajes programados.';
