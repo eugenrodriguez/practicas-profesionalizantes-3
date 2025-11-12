@@ -1,107 +1,73 @@
 // frontend/public/components/dashboard/LiveTripWC.js
 import { api } from '../../services/api.js';
+import { socketService } from '../../services/socketService.js';
+import { tripSimulationService } from '../../services/tripSimulationService.js';
+import './RatingWC.js'; // Importar el componente de rating
 
-class LiveTripWC extends HTMLElement {
+/**
+ * @class LiveTripService
+ * @description Handles API interactions for live trip data.
+ */
+class LiveTripService {
+    static async getTripById(tripId) {
+        return await api.getTripById(tripId);
+    }
+}
+
+/**
+ * @class LiveTripSocketManager
+ * @description Manages all socket communication for a live trip.
+ */
+class LiveTripSocketManager {
     constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-        this.socket = null;
-        this.tripId = null;
-        this._user = null;
-        this.tripData = null;
+        this.componentListeners = [];
+    }
+
+    setupListeners(tripId, callbacks) {
+        socketService.connect();
+        socketService.joinTripRoom(tripId);
+
+        const handleDriverLocationUpdate = (location) => callbacks.onLocationUpdate(location);
+        const handleTripStarted = (data) => callbacks.onTripStarted(data);
+        const handleTripEnded = (data) => callbacks.onTripEnded(data);
+
+        socketService.on('driverLocationUpdate', handleDriverLocationUpdate);
+        socketService.on('tripStarted', handleTripStarted);
+        socketService.on('tripEnded', handleTripEnded);
+
+        this.componentListeners.push(
+            { event: 'driverLocationUpdate', handler: handleDriverLocationUpdate },
+            { event: 'tripStarted', handler: handleTripStarted },
+            { event: 'tripEnded', handler: handleTripEnded }
+        );
+        console.log('✅ Socket listeners configurados para viaje', tripId);
+    }
+
+    removeListeners() {
+        socketService.removeComponentListeners(this.componentListeners);
+        this.componentListeners = [];
+        console.log('🔌 Socket listeners removidos.');
+    }
+
+    emitStartTrip(tripId) {
+        socketService.emit('startTrip', { tripId });
+    }
+}
+
+/**
+ * @class LiveTripMapManager
+ * @description Manages all Leaflet map interactions for a live trip.
+ */
+class LiveTripMapManager {
+    constructor(shadowRoot) {
+        this.shadowRoot = shadowRoot;
         this.map = null;
         this.driverMarker = null;
-        this.simulationInterval = null;
         this.routeCoordinates = null;
         this.isMapInitialized = false;
     }
 
-    set user(userData) {
-        this._user = userData;
-        
-        if (this.isConnected && this.tripData && this.isMapInitialized) {
-            this.setupDriverControls();
-        }
-    }
-
-    get user() {
-        return this._user;
-    }
-
-    async connectedCallback() {
-        const params = new URLSearchParams(window.location.search);
-        this.tripId = params.get('id');
-
-        if (!this.tripId) {
-            this.displayError('No se especificó un ID de viaje.');
-            return;
-        }
-
-        // Cargar datos del viaje
-        const tripRes = await api.getTripById(this.tripId);
-        if (!tripRes.success) {
-            this.displayError('Error al cargar los datos del viaje.');
-            return;
-        }
-        this.tripData = tripRes.trip;
-
-        this.render();
-        this.loadLeaflet();
-        this.connectSocket();
-    }
-
-    disconnectedCallback() {
-        if (this.socket) this.socket.disconnect();
-        if (this.simulationInterval) clearInterval(this.simulationInterval);
-        if (this.map) this.map.remove();
-    }
-
-    displayError(message) {
-        while (this.shadowRoot.firstChild) {
-            this.shadowRoot.removeChild(this.shadowRoot.firstChild);
-        }
-        const errorMsg = document.createElement('p');
-        errorMsg.textContent = message;
-        errorMsg.style.padding = '20px';
-        errorMsg.style.color = '#c62828';
-        errorMsg.style.textAlign = 'center';
-        this.shadowRoot.appendChild(errorMsg);
-    }
-
-    connectSocket() {
-        this.socket = io();
-        
-        this.socket.on('connect', () => {
-            console.log('Socket conectado');
-            this.socket.emit('joinTripRoom', { tripId: this.tripId });
-        });
-
-        this.socket.on('driverLocationUpdate', (location) => {
-            if (this.driverMarker) {
-                const newLatLng = [location.latitude, location.longitude];
-                this.driverMarker.setLatLng(newLatLng);
-                if (this.map) {
-                    this.map.panTo(newLatLng, { animate: true });
-                }
-            }
-        });
-
-        this.socket.on('tripStarted', ({ tripId }) => {
-            console.log(`Viaje ${tripId} iniciado`);
-            this.updateStartButton('en_curso');
-        });
-
-        this.socket.on('tripEnded', ({ tripId }) => {
-            console.log(`Viaje ${tripId} completado`);
-            if (this.simulationInterval) {
-                clearInterval(this.simulationInterval);
-            }
-            this.updateStartButton('completado');
-            this.showRatingUI();
-        });
-    }
-
-    loadLeaflet() {
+    loadScripts() {
         const leafletCSS = document.createElement('link');
         leafletCSS.rel = 'stylesheet';
         leafletCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -112,23 +78,24 @@ class LiveTripWC extends HTMLElement {
         
         const leafletJS = document.createElement('script');
         leafletJS.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        leafletJS.onload = () => {
-            const routingJS = document.createElement('script');
-            routingJS.src = 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js';
-            routingJS.onload = () => this.initMap();
-            this.shadowRoot.appendChild(routingJS);
-        };
         
-        this.shadowRoot.append(leafletCSS, routingCSS, leafletJS);
+        return new Promise((resolve) => {
+            leafletJS.onload = () => {
+                const routingJS = document.createElement('script');
+                routingJS.src = 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js';
+                routingJS.onload = resolve;
+                this.shadowRoot.appendChild(routingJS);
+            };
+            this.shadowRoot.append(leafletCSS, routingCSS, leafletJS);
+        });
     }
 
-    initMap() {
-        const mapContainer = this.shadowRoot.getElementById('map');
-        if (!mapContainer || !this.tripData) return;
+    initMap(mapContainer, tripData, displayErrorCallback, setupDriverControlsCallback) {
+        if (!mapContainer || !tripData) return;
 
-        const { origen_lat, origen_lng, destino_lat, destino_lng } = this.tripData;
+        const { origen_lat, origen_lng, destino_lat, destino_lng } = tripData;
         if (!origen_lat || !origen_lng || !destino_lat || !destino_lng) {
-            this.displayError('El viaje no tiene coordenadas válidas para mostrar la ruta.');
+            displayErrorCallback('El viaje no tiene coordenadas válidas para mostrar la ruta.');
             return;
         }
 
@@ -182,8 +149,8 @@ class LiveTripWC extends HTMLElement {
             if (route && route.coordinates) {
                 this.routeCoordinates = route.coordinates;
                 this.isMapInitialized = true;
-                console.log('🔵 Map initialized, calling setupDriverControls');
-                this.setupDriverControls();
+                console.log('🔵 Mapa inicializado con', route.coordinates.length, 'puntos');
+                setupDriverControlsCallback();
             }
         });
 
@@ -211,120 +178,132 @@ class LiveTripWC extends HTMLElement {
         }, 100);
     }
 
-    setupDriverControls() {
-        if (!this.user || !this.tripData || this.user.id !== this.tripData.conductor_id) {
-            const controlsContainer = this.shadowRoot.getElementById('driver-controls');
-            if (controlsContainer) {
-                controlsContainer.style.display = 'none';
+    updateDriverLocation(location) {
+        if (this.driverMarker) {
+            const newLatLng = [location.latitude, location.longitude];
+            this.driverMarker.setLatLng(newLatLng);
+            if (this.map) {
+                this.map.panTo(newLatLng, { animate: true });
             }
-            return;
-        }
-
-        const controlsContainer = this.shadowRoot.getElementById('driver-controls');
-        if (!controlsContainer) return;
-
-        controlsContainer.style.display = 'flex';
-        this.updateStartButton(this.tripData.estado || 'activo');
-    }
-
-    startSimulation() {
-        if (!this.routeCoordinates || this.routeCoordinates.length === 0) {
-            console.warn('No hay coordenadas de ruta para simular');
-            return;
-        }
-
-        let currentIndex = 0;
-        this.simulationInterval = setInterval(() => {
-            if (currentIndex >= this.routeCoordinates.length) {
-                clearInterval(this.simulationInterval);
-                this.socket.emit('endTrip', { tripId: this.tripId });
-                return;
-            }
-
-            const currentCoord = this.routeCoordinates[currentIndex];
-            const location = {
-                latitude: currentCoord.lat,
-                longitude: currentCoord.lng
-            };
-
-            this.socket.emit('driverLocationUpdate', { tripId: this.tripId, location });
-            currentIndex += 5; // Saltar 5 puntos para simular más rápido
-        }, 1000);
-    }
-
-    showRatingUI() {
-        const mapContainer = this.shadowRoot.getElementById('map-container');
-        if (mapContainer) mapContainer.style.display = 'none';
-
-        const ratingContainer = this.shadowRoot.getElementById('rating-container');
-        if (!ratingContainer) return;
-
-        ratingContainer.style.display = 'block';
-
-        const isDriver = this.user && this.tripData && this.user.id === this.tripData.conductor_id;
-
-        const ratingTitle = ratingContainer.querySelector('h2');
-        if (ratingTitle) {
-            ratingTitle.textContent = isDriver
-                ? 'Viaje finalizado' 
-                : `Califica tu viaje con ${this.tripData.conductor_name}`;
-        }
-
-        
-    }
-
-    updateStartButton(status) {
-        const startBtn = this.shadowRoot.getElementById('start-btn');
-        if (!startBtn) return;
-
-        if (status === 'completado') {
-            startBtn.textContent = 'Viaje Completado';
-            startBtn.disabled = true;
-        } else if (status === 'en_curso') {
-            startBtn.textContent = 'Viaje en Curso';
-            startBtn.disabled = true;
-        } else { // 'activo' o 'pendiente'
-            startBtn.textContent = 'Iniciar Viaje';
-            startBtn.disabled = false;
-        }
-
-        if (this.tripData) {
-            this.tripData.estado = status;
         }
     }
 
-    render() {
-        while (this.shadowRoot.firstChild) {
-            this.shadowRoot.removeChild(this.shadowRoot.firstChild);
-        }
+    getRouteCoordinates() {
+        return this.routeCoordinates;
+    }
 
+    invalidateSize() {
+        if (this.map) {
+            this.map.invalidateSize();
+        }
+    }
+
+    removeMap() {
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+            this.driverMarker = null;
+            this.routeCoordinates = null;
+            this.isMapInitialized = false;
+        }
+    }
+}
+
+/**
+ * @class LiveTripView
+ * @description Manages the creation and state of the DOM elements for the live trip.
+ */
+class LiveTripView {
+    constructor(shadowRoot) {
+        this.shadowRoot = shadowRoot;
+        this.elements = {};
+    }
+
+    render(tripData, isDriver) {
         const style = document.createElement('style');
         style.textContent = `
-            /* Estilos de live-trip.css combinados aquí */
             * { box-sizing: border-box; margin: 0; padding: 0; }
-            .live-trip-container { padding: 20px; max-width: 1000px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-            h2 { font-size: 1.75rem; color: #2c3e50; margin-bottom: 1.5rem; text-align: center; }
-            #map-container { background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
-            #map { height: 500px; width: 100%; background-color: #eee; border-radius: 8px; }
-            .car-icon { background: transparent !important; border: none !important; }
-            #driver-controls { display: none; gap: 10px; margin-top: 15px; justify-content: center; flex-wrap: wrap; }
-            .control-btn { padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.3s; }
-            .start-btn { background-color: #4CAF50; color: white; }
-            .start-btn:hover:not(:disabled) { background-color: #45a049; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); }
-            .control-btn:disabled { background-color: #ccc; cursor: not-allowed; opacity: 0.6; }
-            #rating-container { display: none; text-align: center; padding: 50px 20px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-top: 20px; }
-            .stars { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
-            .stars span { font-size: 2.5rem; cursor: pointer; color: #ffc107; transition: transform 0.2s; }
-            .stars span:hover { transform: scale(1.2); }
-            #rating-container p { color: #546e7a; margin: 15px 0; }
-            #rating-container button { margin-top: 20px; padding: 12px 30px; background-color: #00796b; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-            #rating-container button:hover:not(:disabled) { background-color: #00695c; transform: translateY(-2px); }
-            #rating-container button:disabled { background-color: #b0bec5; cursor: not-allowed; }
-            .back-btn { display: block; width: 100%; max-width: 300px; margin: 20px auto 0; padding: 12px; background-color: #6c757d; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-            .back-btn:hover { background-color: #5a6268; transform: translateY(-2px); }
-            .passenger-rating-list { list-style: none; padding: 0; margin-top: 20px; }
-            .passenger-rating-item { background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; }
+            .live-trip-container { 
+                padding: 20px; 
+                max-width: 1000px; 
+                margin: 0 auto; 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            }
+            h2 { 
+                font-size: 1.75rem; 
+                color: #2c3e50; 
+                margin-bottom: 1.5rem; 
+                text-align: center; 
+            }
+            #map-container { 
+                background: white; 
+                border-radius: 12px; 
+                padding: 1rem; 
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+            }
+            #map { 
+                height: 500px; 
+                width: 100%; 
+                background-color: #eee; 
+                border-radius: 8px; 
+            }
+            .car-icon { 
+                background: transparent !important; 
+                border: none !important; 
+            }
+            #driver-controls { 
+                display: none; 
+                gap: 10px; 
+                margin-top: 15px; 
+                justify-content: center; 
+                flex-wrap: wrap; 
+            }
+            .control-btn { 
+                padding: 12px 24px; 
+                border-radius: 8px; 
+                border: none; 
+                cursor: pointer; 
+                font-weight: 600; 
+                font-size: 1rem; 
+                transition: all 0.3s; 
+            }
+            .start-btn { 
+                background-color: #4CAF50; 
+                color: white; 
+            }
+            .start-btn:hover:not(:disabled) { 
+                background-color: #45a049; 
+                transform: translateY(-2px); 
+                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); 
+            }
+            .control-btn:disabled { 
+                background-color: #ccc; 
+                cursor: not-allowed; 
+                opacity: 0.6; 
+            }
+            #rating-container { 
+                display: none; 
+            }
+            .back-btn { 
+                display: block; 
+                width: 100%; 
+                max-width: 300px; 
+                margin: 20px auto 0; 
+                padding: 12px; 
+                background-color: #6c757d; 
+                color: white; 
+                border: none; 
+                border-radius: 8px; 
+                font-weight: 600; 
+                cursor: pointer; 
+                transition: all 0.3s; 
+            }
+            .back-btn:hover { 
+                background-color: #5a6268; 
+                transform: translateY(-2px); 
+            }
         `;
+        this.shadowRoot.appendChild(style);
 
         const container = document.createElement('div');
         container.className = 'live-trip-container';
@@ -344,137 +323,216 @@ class LiveTripWC extends HTMLElement {
         const startBtn = document.createElement('button');
         startBtn.id = 'start-btn';
         startBtn.classList.add('control-btn', 'start-btn');
-        startBtn.addEventListener('click', () => {
-            if (confirm('¿Estás seguro de iniciar el viaje?')) {
-                this.socket.emit('startTrip', { tripId: this.tripId });
-                this.startSimulation();
-            }
-        });
         driverControls.appendChild(startBtn);
         mapContainer.appendChild(driverControls);
 
         const ratingContainer = document.createElement('div');
         ratingContainer.id = 'rating-container';
 
-        const ratingTitle = document.createElement('h2');
-
-        const isDriver = this.user && this.tripData && this.user.id === this.tripData.conductor_id;
-
-        if (isDriver) {
-            ratingTitle.textContent = 'Califica a tus Pasajeros';
-            ratingContainer.appendChild(ratingTitle);
-
-            const passengerList = document.createElement('ul');
-            passengerList.className = 'passenger-rating-list';
-
-            if (this.tripData.pasajeros && this.tripData.pasajeros.length > 0) {
-                this.tripData.pasajeros.forEach(pasajero => {
-                    const item = document.createElement('li');
-                    item.className = 'passenger-rating-item';
-
-                    const passengerName = document.createElement('h3');
-                    passengerName.textContent = pasajero.name;
-
-                    const starsDiv = this.createStarsElement(pasajero.id);
-                    const submitBtn = document.createElement('button');
-                    submitBtn.textContent = `Calificar a ${pasajero.name}`;
-                    submitBtn.disabled = true;
-
-                    starsDiv.addEventListener('rating-selected', () => {
-                        submitBtn.disabled = false;
-                    });
-
-                    submitBtn.addEventListener('click', async () => {
-                        const rating = parseInt(starsDiv.dataset.rating || '0');
-                        if (rating === 0) return;
-                        
-                        submitBtn.disabled = true;
-                        submitBtn.textContent = 'Enviando...';
-
-                        const res = await api.submitRating(this.tripId, pasajero.id, rating, '');
-                        if (res.success) {
-                            const thanksMsg = document.createElement('h4');
-                            thanksMsg.textContent = `¡Gracias por calificar a ${pasajero.name}!`;
-                            item.innerHTML = ''; 
-                            item.appendChild(thanksMsg);
-                        } else {
-                            alert(`Error al calificar: ${res.error}`);
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = `Calificar a ${pasajero.name}`;
-                        }
-                    });
-
-                    item.append(passengerName, starsDiv, submitBtn);
-                    passengerList.appendChild(item);
-                });
-            } else {
-                const noPassengers = document.createElement('p');
-                noPassengers.textContent = 'No hubo pasajeros en este viaje.';
-                passengerList.appendChild(noPassengers);
-            }
-            ratingContainer.appendChild(passengerList);
-        } else {
-            ratingTitle.textContent = `Califica tu viaje con ${this.tripData.conductor_name}`;
-            const starsDiv = this.createStarsElement(this.tripData.conductor_id);
-            const submitRatingBtn = document.createElement('button');
-            submitRatingBtn.textContent = 'Enviar Calificación';
-            submitRatingBtn.disabled = true;
-
-            starsDiv.addEventListener('rating-selected', () => {
-                submitRatingBtn.disabled = false;
-            });
-
-            submitRatingBtn.addEventListener('click', async () => {
-                const selectedRating = parseInt(starsDiv.dataset.rating || '0');
-                if (selectedRating === 0) return alert('Por favor, selecciona una calificación.');
-
-                const res = await api.submitRating(this.tripId, this.tripData.conductor_id, selectedRating, '');
-                alert(res.success ? '¡Gracias por tu calificación!' : `Error: ${res.error}`);
-                
-                window.history.pushState({}, '', '/dashboard');
-                window.dispatchEvent(new Event('popstate'));
-            });
-
-            ratingContainer.append(ratingTitle, starsDiv, submitRatingBtn);
-        }
-
-        const backBtn = document.createElement('button');
-        backBtn.classList.add('back-btn');
-        backBtn.textContent = '← Volver al Dashboard';
-        backBtn.addEventListener('click', () => {
-            window.history.pushState({}, '', '/dashboard');
-            window.dispatchEvent(new Event('popstate'));
-        });
-
         container.appendChild(title);
         container.appendChild(mapContainer);
         container.appendChild(ratingContainer);
-        container.appendChild(backBtn);
 
-        this.shadowRoot.appendChild(style);
-        this.shadowRoot.appendChild(container);
+        this.elements = {
+            container,
+            mapContainer,
+            mapDiv,
+            driverControls,
+            startBtn,
+            ratingContainer
+        };
+        return container;
     }
 
-    createStarsElement(targetId) {
-        const starsDiv = document.createElement('div');
-        starsDiv.className = 'stars';
-        starsDiv.dataset.targetId = targetId;
-
-        for (let i = 1; i <= 5; i++) {
-            const star = document.createElement('span');
-            star.textContent = '☆';
-            star.dataset.value = i;
-            star.addEventListener('click', () => {
-                const rating = star.dataset.value;
-                starsDiv.dataset.rating = rating;
-                starsDiv.querySelectorAll('span').forEach(s => {
-                    s.textContent = parseInt(s.dataset.value) <= rating ? '★' : '☆';
-                });
-                starsDiv.dispatchEvent(new CustomEvent('rating-selected'));
-            });
-            starsDiv.appendChild(star);
+    displayError(message) {
+        while (this.shadowRoot.firstChild) {
+            this.shadowRoot.removeChild(this.shadowRoot.firstChild);
         }
-        return starsDiv;
+        const errorMsg = document.createElement('p');
+        errorMsg.textContent = message;
+        errorMsg.style.padding = '20px';
+        errorMsg.style.color = '#c62828';
+        errorMsg.style.textAlign = 'center';
+        this.shadowRoot.appendChild(errorMsg);
+    }
+
+    updateStartButton(status) {
+        const startBtn = this.elements.startBtn;
+        if (!startBtn) return;
+
+        if (status === 'completado') {
+            startBtn.textContent = 'Viaje Completado';
+            startBtn.disabled = true;
+        } else if (status === 'en_curso') {
+            startBtn.textContent = 'Viaje en Curso';
+            startBtn.disabled = true;
+        } else { // 'activo' o 'pendiente'
+            startBtn.textContent = 'Iniciar Viaje';
+            startBtn.disabled = false;
+        }
+    }
+
+    setupDriverControls(isDriver, tripStatus) {
+        const controlsContainer = this.elements.driverControls;
+        if (!controlsContainer) return;
+
+        if (isDriver) {
+            controlsContainer.style.display = 'flex';
+            this.updateStartButton(tripStatus);
+        } else {
+            controlsContainer.style.display = 'none';
+        }
+    }
+
+    showRatingUI(tripData, user) {
+        if (this.elements.mapContainer) this.elements.mapContainer.style.display = 'none';
+
+        const ratingContainer = this.elements.ratingContainer;
+        if (!ratingContainer) return;
+
+        ratingContainer.style.display = 'block';
+
+        const ratingComponent = document.createElement('rating-wc');
+        ratingComponent.tripData = tripData;
+        ratingComponent.user = user;
+
+        while (ratingContainer.firstChild) {
+            ratingContainer.removeChild(ratingContainer.firstChild);
+        }
+        ratingContainer.appendChild(ratingComponent);
+    }
+}
+
+/**
+ * @class LiveTripWC
+ * @description Web component for tracking a live trip. Acts as a controller.
+ */
+class LiveTripWC extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.tripId = null;
+        this._user = null;
+        this.tripData = null;
+        this.view = new LiveTripView(this.shadowRoot);
+        this.mapManager = new LiveTripMapManager(this.shadowRoot);
+        this.socketManager = new LiveTripSocketManager();
+    }
+
+    set user(userData) {
+        this._user = userData;
+        if (this.isConnected && this.tripData && this.mapManager.isMapInitialized) {
+            this.view.setupDriverControls(this.user.id === this.tripData.conductor_id, this.tripData.estado);
+        }
+        const ratingComponent = this.shadowRoot.querySelector('rating-wc');
+        if (ratingComponent) {
+            ratingComponent.user = userData;
+        }
+    }
+
+    get user() {
+        return this._user;
+    }
+
+    async connectedCallback() {
+        const params = new URLSearchParams(window.location.search);
+        this.tripId = params.get('id');
+
+        if (!this.tripId) {
+            this.view.displayError('No se especificó un ID de viaje.');
+            return;
+        }
+
+        const tripRes = await LiveTripService.getTripById(this.tripId);
+        if (!tripRes.success) {
+            this.view.displayError('Error al cargar los datos del viaje.');
+            return;
+        }
+        this.tripData = tripRes.trip;
+
+        this.render();
+        await this.mapManager.loadScripts();
+        this.mapManager.initMap(
+            this.view.elements.mapDiv,
+            this.tripData,
+            (msg) => this.view.displayError(msg),
+            () => this.view.setupDriverControls(this.user.id === this.tripData.conductor_id, this.tripData.estado)
+        );
+        this.setupSocketListeners();
+        this.addEventListeners();
+    }
+
+    disconnectedCallback() {
+        console.log('🔌 Componente LiveTripWC desconectándose...');
+        this.socketManager.removeListeners();
+        this.mapManager.removeMap();
+        this.removeEventListeners();
+        console.log('✅ Componente desconectado, simulación sigue activa');
+    }
+
+    render() {
+        while (this.shadowRoot.firstChild) {
+            this.shadowRoot.removeChild(this.shadowRoot.firstChild);
+        }
+        const content = this.view.render(this.tripData, this.user && this.tripData && this.user.id === this.tripData.conductor_id);
+        this.shadowRoot.appendChild(content);
+    }
+
+    addEventListeners() {
+        this.view.elements.startBtn.addEventListener('click', this.handleStartTripClick.bind(this));
+    }
+
+    removeEventListeners() {
+        this.view.elements.startBtn.removeEventListener('click', this.handleStartTripClick.bind(this));
+    }
+
+    handleStartTripClick() {
+        if (confirm('¿Estás seguro de iniciar el viaje? La simulación continuará en segundo plano.')) {
+            this.socketManager.emitStartTrip(this.tripId);
+            this.startSimulation();
+        }
+    }
+
+
+
+    setupSocketListeners() {
+        this.socketManager.setupListeners(this.tripId, {
+            onLocationUpdate: (location) => this.mapManager.updateDriverLocation(location),
+            onTripStarted: ({ tripId }) => {
+                console.log(`Viaje ${tripId} iniciado`);
+                this.view.updateStartButton('en_curso');
+                if (this.tripData) this.tripData.estado = 'en_curso';
+            },
+            onTripEnded: ({ tripId }) => {
+                console.log(`Viaje ${tripId} completado`);
+                tripSimulationService.stopSimulation(tripId);
+                this.view.updateStartButton('completado');
+                if (this.tripData) this.tripData.estado = 'completado';
+                this.view.showRatingUI(this.tripData, this.user);
+            }
+        });
+    }
+
+    startSimulation() {
+        const routeCoordinates = this.mapManager.getRouteCoordinates();
+        if (!routeCoordinates || routeCoordinates.length === 0) {
+            console.warn('No hay coordenadas de ruta para simular');
+            alert('No se pudo iniciar la simulación. No hay coordenadas disponibles.');
+            return;
+        }
+
+        const success = tripSimulationService.startSimulation(
+            this.tripId,
+            routeCoordinates
+        );
+
+        if (success) {
+            console.log('✅ Simulación iniciada correctamente en segundo plano');
+            alert('Viaje iniciado. La simulación continuará aunque salgas de esta vista.');
+        } else {
+            console.error('❌ Error al iniciar la simulación');
+            alert('Error al iniciar la simulación.');
+        }
     }
 }
 
