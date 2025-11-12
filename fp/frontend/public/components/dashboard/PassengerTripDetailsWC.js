@@ -1,9 +1,18 @@
+import { api } from '../../services/api.js';
+
+// --- Service Class: Handles all API interactions ---
+class PassengerTripDetailsService {
+    submitRating(tripId, driverId, rating, comment) {
+        return api.submitRating(tripId, driverId, rating, comment);
+    }
+}
+
 // --- View Class: Manages DOM creation and updates, emits events ---
 class PassengerTripDetailsView {
     constructor(host) {
         this.host = host;
         this.shadowRoot = host.shadowRoot;
-        this.ratingWC = null;
+        this.ratingFormContainer = null;
     }
 
     dispatchEvent(eventName, detail) {
@@ -42,10 +51,7 @@ class PassengerTripDetailsView {
         const modalHeader = this.createModalHeader();
         const modalBody = this.createModalBody(trip, user);
 
-        this.ratingWC = document.createElement('rating-wc');
-        this.ratingWC.style.display = 'none'; // Hidden by default
-        
-        modalContent.append(modalHeader, modalBody, this.ratingWC);
+        modalContent.append(modalHeader, modalBody);
         this.shadowRoot.appendChild(modalContent);
         this.host.addEventListener('click', () => this.dispatchEvent('close-modal'));
     }
@@ -125,12 +131,80 @@ class PassengerTripDetailsView {
         conductorSection.appendChild(this.createDetail('Patente', trip.patente));
         
         const rateBtn = document.createElement('button');
-        rateBtn.textContent = 'Calificar Viaje';
+        rateBtn.textContent = 'Enviar Comentario';
         rateBtn.classList.add('rate-btn');
-        rateBtn.addEventListener('click', () => this.dispatchEvent('toggle-rating-wc'));
-        conductorSection.appendChild(rateBtn);
+        
+        const ratingFormWrapper = document.createElement('div');
+        this.ratingFormContainer = { wrapper: ratingFormWrapper, rateBtn };
+
+        rateBtn.addEventListener('click', () => this.dispatchEvent('toggle-rating-form'));
+        
+        conductorSection.append(rateBtn, ratingFormWrapper);
 
         return conductorSection;
+    }
+
+    toggleRatingForm(show) {
+        if (!this.ratingFormContainer) return;
+
+        const { wrapper, rateBtn } = this.ratingFormContainer;
+        this.clearContainer(wrapper);
+        rateBtn.style.display = show ? 'none' : 'block';
+
+        if (show) {
+            const form = document.createElement('div');
+            form.classList.add('rating-form');
+
+            const commentLabel = document.createElement('label');
+            commentLabel.textContent = 'Comentario:';
+            const commentInput = document.createElement('textarea');
+            commentInput.placeholder = `Deja un comentario para el conductor...`;
+
+            const submitBtn = document.createElement('button');
+            submitBtn.textContent = 'Enviar Comentario';
+            submitBtn.disabled = true;
+
+            commentInput.addEventListener('input', () => {
+                submitBtn.disabled = commentInput.value.trim() === '';
+            });
+
+            submitBtn.addEventListener('click', () => {
+                this.dispatchEvent('submit-rating', {
+                    comment: commentInput.value
+                });
+            });
+
+            form.append(commentLabel, commentInput, submitBtn);
+            wrapper.appendChild(form);
+            this.ratingFormContainer.submitBtn = submitBtn;
+        }
+    }
+
+    setRatingFormLoading(isLoading) {
+        if (!this.ratingFormContainer || !this.ratingFormContainer.submitBtn) return;
+
+        const submitBtn = this.ratingFormContainer.submitBtn;
+        if (submitBtn) {
+            submitBtn.disabled = isLoading;
+            submitBtn.textContent = isLoading ? 'Enviando...' : 'Enviar Comentario';
+        }
+    }
+
+    showRatingSuccess(driverName) {
+        if (!this.ratingFormContainer) return;
+        const { wrapper, rateBtn } = this.ratingFormContainer;
+
+        this.clearContainer(wrapper);
+        const thanksMsg = document.createElement('p');
+        thanksMsg.textContent = `¡Gracias por tu comentario sobre ${driverName}!`;
+        thanksMsg.classList.add('success-message');
+        wrapper.appendChild(thanksMsg);
+        if (rateBtn) rateBtn.remove();
+    }
+
+    showRatingError(message) {
+        alert(message);
+        if (this.ratingFormContainer) this.toggleRatingForm(false);
     }
 }
 
@@ -139,6 +213,7 @@ class PassengerTripDetailsWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this.service = new PassengerTripDetailsService();
         this.view = new PassengerTripDetailsView(this);
         this._trip = null;
         this._user = null;
@@ -148,10 +223,6 @@ class PassengerTripDetailsWC extends HTMLElement {
         this._trip = data;
         if (this.isConnected) {
             this.view.render(this._trip, this._user);
-            if (this.view.ratingWC) {
-                this.view.ratingWC.tripData = this._trip;
-                this.view.ratingWC.user = this._user;
-            }
         }
     }
 
@@ -159,10 +230,6 @@ class PassengerTripDetailsWC extends HTMLElement {
         this._user = data;
         if (this.isConnected) {
             this.view.render(this._trip, this._user);
-            if (this.view.ratingWC) {
-                this.view.ratingWC.tripData = this._trip;
-                this.view.ratingWC.user = this._user;
-            }
         }
     }
 
@@ -178,14 +245,13 @@ class PassengerTripDetailsWC extends HTMLElement {
 
     addEventListeners() {
         this.addEventListener('close-modal', this.handleCloseModal);
-        this.addEventListener('toggle-rating-wc', this.handleToggleRatingWC);
-        // Listen for the submit-rating event from the nested RatingWC
+        this.addEventListener('toggle-rating-form', this.handleToggleRatingForm);
         this.addEventListener('submit-rating', this.handleRatingSubmitted);
     }
 
     removeEventListeners() {
         this.removeEventListener('close-modal', this.handleCloseModal);
-        this.removeEventListener('toggle-rating-wc', this.handleToggleRatingWC);
+        this.removeEventListener('toggle-rating-form', this.handleToggleRatingForm);
         this.removeEventListener('submit-rating', this.handleRatingSubmitted);
     }
 
@@ -202,21 +268,30 @@ class PassengerTripDetailsWC extends HTMLElement {
         this.close();
     }
 
-    handleToggleRatingWC = () => {
-        if (this.view.ratingWC) {
-            const isHidden = this.view.ratingWC.style.display === 'none';
-            this.view.ratingWC.style.display = isHidden ? 'block' : 'none';
-            // Ensure tripData and user are set when showing the rating component
-            if (isHidden) {
-                this.view.ratingWC.tripData = this._trip;
-                this.view.ratingWC.user = this._user;
-            }
-        }
+    handleToggleRatingForm = () => {
+        const ref = this.view.ratingFormContainer;
+        const isFormShown = ref && ref.wrapper && ref.wrapper.firstChild;
+        this.view.toggleRatingForm(!isFormShown);
     }
 
-    handleRatingSubmitted = () => {
-        // After rating is submitted, close the modal
-        this.close();
+    handleRatingSubmitted = async (e) => {
+        const { comment } = e.detail;
+
+        if (comment.trim() === '') {
+            this.view.showRatingError('Por favor, escribe un comentario.');
+            return;
+        }
+
+        this.view.setRatingFormLoading(true);
+        const res = await this.service.submitRating(this._trip.id, this._trip.conductor_id, 0, comment);
+        this.view.setRatingFormLoading(false);
+
+        if (res.success) {
+            this.view.showRatingSuccess(this._trip.conductor_name);
+            setTimeout(() => this.close(), 2000); // Cierra el modal después de 2 segundos
+        } else {
+            this.view.showRatingError(res.error || 'No se pudo enviar el comentario.');
+        }
     }
 }
 
