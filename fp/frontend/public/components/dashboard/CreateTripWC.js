@@ -338,7 +338,6 @@ class LeafletMapManager {
             }
             const location = results[0];
 
-            // Busca el waypoint en el array y elimina su marcador anterior si existe
             const existingWaypointIndex = this.waypoints.findIndex(w => w.id === waypointId);
             if (existingWaypointIndex !== -1 && this.waypoints[existingWaypointIndex].marker) {
                 this.map.removeLayer(this.waypoints[existingWaypointIndex].marker);
@@ -358,14 +357,12 @@ class LeafletMapManager {
 
             marker.on('dragend', () => this.updateRouteFromMarkers());
 
-            // Actualiza o agrega el waypoint en el array
             if (existingWaypointIndex !== -1) {
                 this.waypoints[existingWaypointIndex] = { id: waypointId, lat, lng, marker, address: query };
             } else {
                 this.waypoints.push({ id: waypointId, lat, lng, marker, address: query });
             }
 
-            // Marca el elemento de la UI para que no se borre si se agrega otro waypoint sin buscar
             const waypointDiv = this.shadowRoot.getElementById(waypointId)?.parentNode;
             if (waypointDiv) waypointDiv.dataset.hasMarker = 'true';
         } catch (error) {
