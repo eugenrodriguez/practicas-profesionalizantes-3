@@ -156,6 +156,13 @@ class LeafletMapManager {
             const leafletJS = document.createElement('script');
             leafletJS.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
             leafletJS.onload = () => {
+                delete L.Icon.Default.prototype._getIconUrl;
+                L.Icon.Default.mergeOptions({
+                    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                });
+
                 const routingJS = document.createElement('script');
                 routingJS.src = 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js';
                 routingJS.onload = resolve;
@@ -259,6 +266,8 @@ class LeafletMapManager {
                 })
             }).addTo(this.map).bindPopup(type === 'origin' ? 'Origen' : 'Destino').openPopup();
 
+            marker.on('dragend', () => this.updateRouteFromMarkers());
+
             if (type === 'origin') {
                 if (this.originMarker) this.map.removeLayer(this.originMarker);
                 this.originMarker = marker;
@@ -274,6 +283,12 @@ class LeafletMapManager {
     }
 
     addWaypoint() {
+       
+        this.waypoints = this.waypoints.filter(w => w.marker);
+        this.elements.waypointsList.querySelectorAll('.waypoint-item').forEach(item => {
+            if (!item.dataset.hasMarker) item.remove();
+        });
+
         const waypointId = `waypoint-${this.waypoints.length}`;
         const waypointDiv = document.createElement('div');
         waypointDiv.classList.add('waypoint-item');
@@ -295,7 +310,9 @@ class LeafletMapManager {
         this.elements.waypointsList.appendChild(waypointDiv);
 
         searchBtn.addEventListener('click', () => this.searchWaypoint(waypointId, input.value));
+
         removeBtn.addEventListener('click', () => {
+    
             waypointDiv.remove();
             const waypointToRemove = this.waypoints.find(w => w.id === waypointId);
             if (waypointToRemove && waypointToRemove.marker) {
@@ -303,6 +320,8 @@ class LeafletMapManager {
             }
             this.waypoints = this.waypoints.filter(w => w.id !== waypointId);
         });
+
+        this.waypoints.push({ id: waypointId, lat: null, lng: null, marker: null, address: '' });
     }
 
     async searchWaypoint(waypointId, query) {
@@ -318,6 +337,13 @@ class LeafletMapManager {
                 return;
             }
             const location = results[0];
+
+            // Busca el waypoint en el array y elimina su marcador anterior si existe
+            const existingWaypointIndex = this.waypoints.findIndex(w => w.id === waypointId);
+            if (existingWaypointIndex !== -1 && this.waypoints[existingWaypointIndex].marker) {
+                this.map.removeLayer(this.waypoints[existingWaypointIndex].marker);
+            }
+
             const lat = parseFloat(location.lat);
             const lng = parseFloat(location.lon);
             const marker = L.marker([lat, lng], {
@@ -330,7 +356,18 @@ class LeafletMapManager {
                 })
             }).addTo(this.map).bindPopup(`Parada ${this.waypoints.length + 1}`);
 
-            this.waypoints.push({ id: waypointId, lat, lng, marker, address: query });
+            marker.on('dragend', () => this.updateRouteFromMarkers());
+
+            // Actualiza o agrega el waypoint en el array
+            if (existingWaypointIndex !== -1) {
+                this.waypoints[existingWaypointIndex] = { id: waypointId, lat, lng, marker, address: query };
+            } else {
+                this.waypoints.push({ id: waypointId, lat, lng, marker, address: query });
+            }
+
+            // Marca el elemento de la UI para que no se borre si se agrega otro waypoint sin buscar
+            const waypointDiv = this.shadowRoot.getElementById(waypointId)?.parentNode;
+            if (waypointDiv) waypointDiv.dataset.hasMarker = 'true';
         } catch (error) {
             console.error('Error buscando parada:', error);
             Toast.show('Error al buscar la parada.', 'error');
@@ -354,9 +391,25 @@ class LeafletMapManager {
             waypoints: waypointsLatLng,
             routeWhileDragging: true,
             showAlternatives: true,
-            lineOptions: { styles: [{ color: '#4db6ac', weight: 5 }] }
+            lineOptions: { styles: [{ color: '#4db6ac', weight: 5 }] },
+            createMarker: () => null 
         }).addTo(this.map);
         Toast.show('Ruta calculada. Puedes ajustarla arrastrando los marcadores.', 'info');
+    }
+
+    updateRouteFromMarkers() {
+        if (!this.routeControl || !this.originMarker || !this.destinationMarker) {
+            return;
+        }
+
+        const waypointsLatLng = [
+            this.originMarker.getLatLng(),
+            ...this.waypoints
+                .filter(w => w.marker) 
+                .map(w => w.marker.getLatLng()),
+            this.destinationMarker.getLatLng()
+        ];
+        this.routeControl.setWaypoints(waypointsLatLng);
     }
 }
 
