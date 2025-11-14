@@ -1,11 +1,237 @@
-// frontend/public/components/dashboard/MyBookingsWC.js
 import { api } from '../../services/api.js';
+
+class BookingService {
+    static async getProfile() {
+        return await api.getProfile();
+    }
+
+    static async getMyRequests() {
+        return await api.getMyRequests();
+    }
+
+    static async cancelBooking(requestId) {
+        return await api.cancelBooking(requestId);
+    }
+
+    static async getTripById(tripId) {
+        return await api.getTripById(tripId);
+    }
+}
+
+class BookingFilter {
+    static getStatusText(status) {
+        const statusMap = {
+            'pendiente': 'Pendiente',
+            'aceptada': 'Aceptada',
+            'rechazada': 'Rechazada'
+        };
+        return statusMap[status] || status;
+    }
+
+    static applyFilter(requests, filter) {
+        if (filter === 'todas') {
+            return requests;
+        } else if (filter === 'completados') {
+            return requests.filter(r => r.estado === 'aceptada' && r.estado_viaje === 'completado');
+        } else {
+            const estadoMap = {
+                'pendientes': 'pendiente',
+                'aceptadas': 'aceptada',
+                'rechazadas': 'rechazada'
+            };
+            const estadoReal = estadoMap[filter];
+            return requests.filter(r => r.estado === estadoReal);
+        }
+    }
+}
+
+class MyBookingsView {
+    constructor(shadowRoot) {
+        this.shadowRoot = shadowRoot;
+        this.elements = {};
+    }
+
+    render(requests, user, filterButtonsData) {
+        const container = document.createElement('div');
+        container.classList.add('bookings-container');
+
+        const title = document.createElement('h2');
+        title.textContent = 'Mis Reservas';
+
+        const filterContainer = document.createElement('div');
+        filterContainer.classList.add('filter-container');
+        this.elements.filterButtons = [];
+        filterButtonsData.forEach(filter => {
+            const btn = this.createFilterButton(filter.text);
+            if (filter.isActive) btn.classList.add('active');
+            filterContainer.appendChild(btn);
+            this.elements.filterButtons.push(btn);
+        });
+
+        const list = document.createElement('div');
+        list.classList.add('bookings-list');
+        list.id = 'bookings-list';
+        this.elements.bookingsList = list;
+
+        const backBtn = document.createElement('button');
+        backBtn.classList.add('back-btn');
+        backBtn.textContent = '← Volver al Dashboard';
+        this.elements.backBtn = backBtn;
+
+        container.append(title, filterContainer, list, backBtn);
+        this.updateBookingsList(requests, user);
+        return container;
+    }
+
+    createFilterButton(text) {
+        const btn = document.createElement('button');
+        btn.textContent = text;
+        btn.classList.add('filter-btn');
+        return btn;
+    }
+
+    updateBookingsList(requests, user) {
+        const container = this.elements.bookingsList;
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+
+        if (requests.length === 0) {
+            const emptyState = this.createEmptyState(
+                'No hay reservas',
+                'No hay reservas con este filtro'
+            );
+            container.appendChild(emptyState);
+            return;
+        }
+
+        requests.forEach(req => {
+            const card = this.createBookingCard(req, user);
+            container.appendChild(card);
+        });
+    }
+
+    createEmptyState(titleText, messageText) {
+        const emptyState = document.createElement('div');
+        emptyState.classList.add('empty-state');
+
+        const emptyTitle = document.createElement('h3');
+        emptyTitle.textContent = titleText;
+
+        const emptyMessage = document.createElement('p');
+        emptyMessage.textContent = messageText;
+
+        emptyState.append(emptyTitle, emptyMessage);
+        return emptyState;
+    }
+
+    createBookingCard(req, user) {
+        const card = document.createElement('div');
+        card.classList.add('booking-card');
+        card.classList.add(`status-${req.estado}`);
+
+        const header = document.createElement('div');
+        header.classList.add('booking-header');
+
+        const route = document.createElement('h3');
+        route.textContent = `${req.origen} → ${req.destino}`;
+
+        const status = document.createElement('span');
+        status.classList.add('status-badge', `status-${req.estado}`);
+        status.textContent = BookingFilter.getStatusText(req.estado);
+
+        header.append(route, status);
+
+        const details = document.createElement('div');
+        details.classList.add('booking-details');
+
+        const conductorP = document.createElement('p');
+        const conductorStrong = document.createElement('strong');
+        conductorStrong.textContent = 'Conductor: ';
+        conductorP.append(conductorStrong, document.createTextNode(req.conductor_name));
+
+        const fechaP = document.createElement('p');
+        const fechaStrong = document.createElement('strong');
+        fechaStrong.textContent = 'Fecha del viaje: ';
+        const fecha = new Date(req.fecha_salida);
+        const fechaStr = fecha.toLocaleString('es-AR', {
+            weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        fechaP.append(fechaStrong, document.createTextNode(fechaStr));
+
+        const precioP = document.createElement('p');
+        const precioStrong = document.createElement('strong');
+        precioStrong.textContent = 'Precio: ';
+        precioP.append(precioStrong, document.createTextNode(`$${parseFloat(req.precio).toFixed(2)}`));
+
+        const requestDateP = document.createElement('p');
+        const requestDateStrong = document.createElement('strong');
+        requestDateStrong.textContent = 'Solicitado: ';
+        const requestDate = new Date(req.requested_at);
+        const requestStr = requestDate.toLocaleString('es-AR');
+        requestDateP.append(requestDateStrong, document.createTextNode(requestStr));
+
+        details.append(conductorP, fechaP, precioP, requestDateP);
+
+        const actions = document.createElement('div');
+        actions.classList.add('booking-actions');
+
+        const isLive = req.estado_viaje === 'activo' || req.estado_viaje === 'en_curso';
+        if (req.estado === 'aceptada' && isLive) {
+            const viewTripBtn = document.createElement('button');
+            viewTripBtn.textContent = 'Ver Viaje en Vivo';
+            viewTripBtn.classList.add('view-trip-btn');
+            this.elements[`viewTripBtn-${req.id}`] = viewTripBtn; 
+            actions.appendChild(viewTripBtn);
+        }
+
+        const canCancel = (req.estado === 'pendiente' || req.estado === 'aceptada') && 
+                          (req.estado_viaje !== 'completado' && req.estado_viaje !== 'cancelado');
+
+        if (canCancel) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancelar Reserva';
+            cancelBtn.classList.add('cancel-btn');
+            this.elements[`cancelBtn-${req.id}`] = cancelBtn; 
+            actions.appendChild(cancelBtn);
+        }
+
+        if (req.estado === 'aceptada' && req.estado_viaje === 'completado') {
+            const detailsBtn = document.createElement('button');
+            detailsBtn.textContent = 'Ver Detalles';
+            detailsBtn.classList.add('details-btn'); 
+            this.elements[`detailsBtn-${req.id}`] = detailsBtn; 
+            actions.appendChild(detailsBtn);
+        }
+
+        card.append(header, details);
+        if (actions.childNodes.length > 0) {
+            card.appendChild(actions);
+        }
+
+        return card;
+    }
+
+    displayError(message) {
+        const error = document.createElement('p');
+        error.textContent = message;
+        error.classList.add('error-message');
+        this.shadowRoot.appendChild(error);
+    }
+
+    showTripDetailsModal(tripDetailsElement) {
+        document.body.appendChild(tripDetailsElement);
+    }
+}
 
 class MyBookingsWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         this.requests = [];
+        this.user = null; 
+        this.view = new MyBookingsView(this.shadowRoot);
+        this.currentFilter = 'todas';
     }
 
     connectedCallback() {
@@ -27,271 +253,120 @@ class MyBookingsWC extends HTMLElement {
         styles.onload = () => {
             this.style.opacity = '1';
         };
+        this.shadowRoot.appendChild(styles);
 
-        const container = document.createElement('div');
-        container.classList.add('bookings-container');
+        const profileRes = await BookingService.getProfile();
+        if (profileRes.success) {
+            this.user = profileRes.user;
+        }
 
-        const title = document.createElement('h2');
-        title.textContent = 'Mis Reservas';
-
-        const res = await api.getMyRequests();
+        const res = await BookingService.getMyRequests();
         if (!res.success) {
-            const error = document.createElement('p');
-            error.textContent = res.error || 'Error al cargar reservas';
-            error.classList.add('error-message');
-            container.appendChild(title);
-            container.appendChild(error);
-            this.shadowRoot.appendChild(styles);
-            this.shadowRoot.appendChild(container);
+            this.view.displayError(res.error || 'Error al cargar reservas');
             return;
         }
 
         this.requests = res.requests || [];
 
-        const filterContainer = document.createElement('div');
-        filterContainer.classList.add('filter-container');
-
         const filters = ['Todas', 'Pendientes', 'Aceptadas', 'Rechazadas', 'Completados'];
-        filters.forEach(filter => {
-            const btn = document.createElement('button');
-            btn.textContent = filter;
-            btn.classList.add('filter-btn');
-            if (filter === 'Todas') btn.classList.add('active');
-            
-            btn.addEventListener('click', () => {
-                const allFilterBtns = this.shadowRoot.querySelectorAll('.filter-btn');
-                allFilterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                this.filterRequests(filter.toLowerCase());
-            });
-            
-            filterContainer.appendChild(btn);
-        });
+        const filterButtonsData = filters.map(filter => ({
+            text: filter,
+            isActive: filter.toLowerCase() === this.currentFilter
+        }));
 
-        const list = document.createElement('div');
-        list.classList.add('bookings-list');
-        list.id = 'bookings-list';
-
-        if (this.requests.length === 0) {
-            const emptyState = this.createEmptyState(
-                '📭 No tienes reservas',
-                'Busca viajes disponibles y solicita asientos'
-            );
-            list.appendChild(emptyState);
-        } else {
-            this.renderRequests(this.requests, list);
-        }
-
-        const backBtn = document.createElement('button');
-        backBtn.classList.add('back-btn');
-        backBtn.textContent = '← Volver al Dashboard';
-        backBtn.addEventListener('click', () => {
-            window.history.pushState({}, '', '/dashboard');
-            window.dispatchEvent(new Event('popstate'));
-        });
-
-        container.appendChild(title);
-        container.appendChild(filterContainer);
-        container.appendChild(list);
-        container.appendChild(backBtn);
-        
-        this.shadowRoot.appendChild(styles);
+        const container = this.view.render(
+            BookingFilter.applyFilter(this.requests, this.currentFilter),
+            this.user,
+            filterButtonsData
+        );
         this.shadowRoot.appendChild(container);
+        this.addEventListeners();
     }
 
-    createEmptyState(titleText, messageText) {
-        const emptyState = document.createElement('div');
-        emptyState.classList.add('empty-state');
+    addEventListeners() {
+        this.view.elements.filterButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => this.handleFilterClick(e));
+        });
+        this.view.elements.backBtn.addEventListener('click', () => this.handleBackClick());
 
-        const emptyTitle = document.createElement('h3');
-        emptyTitle.textContent = titleText;
-
-        const emptyMessage = document.createElement('p');
-        emptyMessage.textContent = messageText;
-
-        emptyState.appendChild(emptyTitle);
-        emptyState.appendChild(emptyMessage);
-
-        return emptyState;
+        this.requests.forEach(req => {
+            if (this.view.elements[`viewTripBtn-${req.id}`]) {
+                this.view.elements[`viewTripBtn-${req.id}`].addEventListener('click', () => this.handleViewTripClick(req.viaje_id));
+            }
+            if (this.view.elements[`cancelBtn-${req.id}`]) {
+                this.view.elements[`cancelBtn-${req.id}`].addEventListener('click', () => this.handleCancelBookingClick(req.id));
+            }
+            if (this.view.elements[`detailsBtn-${req.id}`]) {
+                this.view.elements[`detailsBtn-${req.id}`].addEventListener('click', () => this.handleShowTripDetailsClick(req));
+            }
+        });
     }
 
-    renderRequests(requests, container) {
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
+    removeEventListeners() {
+        this.view.elements.filterButtons.forEach(btn => {
+            btn.removeEventListener('click', (e) => this.handleFilterClick(e));
+        });
+        this.view.elements.backBtn.removeEventListener('click', () => this.handleBackClick());
+
+        this.requests.forEach(req => {
+            if (this.view.elements[`viewTripBtn-${req.id}`]) {
+                this.view.elements[`viewTripBtn-${req.id}`].removeEventListener('click', () => this.handleViewTripClick(req.viaje_id));
+            }
+            if (this.view.elements[`cancelBtn-${req.id}`]) {
+                this.view.elements[`cancelBtn-${req.id}`].removeEventListener('click', () => this.handleCancelBookingClick(req.id));
+            }
+            if (this.view.elements[`detailsBtn-${req.id}`]) {
+                this.view.elements[`detailsBtn-${req.id}`].removeEventListener('click', () => this.handleShowTripDetailsClick(req));
+            }
+        });
+    }
+
+    handleFilterClick(e) {
+        const filterText = e.target.textContent.toLowerCase();
+        this.currentFilter = filterText;
+        this.view.elements.filterButtons.forEach(btn => {
+            if (btn === e.target) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        this.view.updateBookingsList(BookingFilter.applyFilter(this.requests, this.currentFilter), this.user);
+    }
+
+    handleBackClick() {
+        window.history.pushState({}, '', '/dashboard');
+        window.dispatchEvent(new Event('popstate'));
+    }
+
+    handleViewTripClick(tripId) {
+        window.history.pushState({}, '', `/dashboard/live-trip?id=${tripId}`);
+        window.dispatchEvent(new Event('popstate'));
+    }
+
+    async handleCancelBookingClick(requestId) {
+        if (!confirm('¿Estás seguro de que quieres cancelar tu reserva?')) return;
+        const res = await BookingService.cancelBooking(requestId);
+        if (res.success) {
+            alert('Reserva cancelada.');
+            this.load(); 
+        } else {
+            alert(res.error || 'No se pudo cancelar la reserva.');
         }
+    }
 
-        if (requests.length === 0) {
-            const emptyState = this.createEmptyState(
-                'No hay reservas',
-                'No hay reservas con este filtro'
-            );
-            container.appendChild(emptyState);
+    async handleShowTripDetailsClick(request) {
+        const res = await BookingService.getTripById(request.viaje_id);
+        if (!res.success) {
+            alert('No se pudieron cargar los detalles completos del viaje.');
             return;
         }
+        const fullTripDetails = res.trip;
 
-        requests.forEach(req => {
-            const card = this.createBookingCard(req);
-            container.appendChild(card);
-        });
-    }
-
-    createBookingCard(req) {
-        const card = document.createElement('div');
-        card.classList.add('booking-card');
-        card.classList.add(`status-${req.estado}`);
-
-        const header = document.createElement('div');
-        header.classList.add('booking-header');
-
-        const route = document.createElement('h3');
-        route.textContent = `${req.origen} → ${req.destino}`;
-
-        const status = document.createElement('span');
-        status.classList.add('status-badge', `status-${req.estado}`);
-        status.textContent = this.getStatusText(req.estado);
-
-        header.appendChild(route);
-        header.appendChild(status);
-
-        const details = document.createElement('div');
-        details.classList.add('booking-details');
-
-        const conductorP = document.createElement('p');
-        const conductorStrong = document.createElement('strong');
-        conductorStrong.textContent = 'Conductor: ';
-        conductorP.appendChild(conductorStrong);
-        conductorP.appendChild(document.createTextNode(req.conductor_name));
-
-        const fechaP = document.createElement('p');
-        const fechaStrong = document.createElement('strong');
-        fechaStrong.textContent = 'Fecha del viaje: ';
-        const fecha = new Date(req.fecha_salida);
-        const fechaStr = fecha.toLocaleString('es-AR', {
-            weekday: 'long',
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        fechaP.appendChild(fechaStrong);
-        fechaP.appendChild(document.createTextNode(fechaStr));
-
-        const precioP = document.createElement('p');
-        const precioStrong = document.createElement('strong');
-        precioStrong.textContent = 'Precio: ';
-        precioP.appendChild(precioStrong);
-        precioP.appendChild(document.createTextNode(`$${parseFloat(req.precio).toFixed(2)}`));
-
-        const requestDateP = document.createElement('p');
-        const requestDateStrong = document.createElement('strong');
-        requestDateStrong.textContent = 'Solicitado: ';
-        const requestDate = new Date(req.requested_at);
-        const requestStr = requestDate.toLocaleString('es-AR');
-        requestDateP.appendChild(requestDateStrong);
-        requestDateP.appendChild(document.createTextNode(requestStr));
-
-        details.appendChild(conductorP);
-        details.appendChild(fechaP);
-        details.appendChild(precioP);
-        details.appendChild(requestDateP);
-
-        const actions = document.createElement('div');
-        actions.classList.add('booking-actions');
-
-        const isLive = req.estado_viaje === 'activo' || req.estado_viaje === 'en_curso';
-        if (req.estado === 'aceptada' && isLive) {
-            const viewTripBtn = document.createElement('button');
-            viewTripBtn.textContent = 'Ver Viaje en Vivo';
-            viewTripBtn.classList.add('view-trip-btn');
-            viewTripBtn.addEventListener('click', () => {
-                window.history.pushState({}, '', `/dashboard/live-trip?id=${req.viaje_id}`);
-                window.dispatchEvent(new Event('popstate'));
-            });
-            actions.appendChild(viewTripBtn);
-        }
-
-        const canCancel = (req.estado === 'pendiente' || req.estado === 'aceptada') && 
-                          (req.estado_viaje !== 'completado' && req.estado_viaje !== 'cancelado');
-
-        if (canCancel) {
-            const cancelBtn = document.createElement('button');
-            cancelBtn.textContent = 'Cancelar Reserva';
-            cancelBtn.classList.add('cancel-btn');
-            cancelBtn.addEventListener('click', async () => {
-                if (!confirm('¿Estás seguro de que quieres cancelar tu reserva?')) return;
-                const res = await api.cancelBooking(req.id);
-                if (res.success) {
-                    alert('Reserva cancelada.');
-                    this.load();
-                } else {
-                    alert(res.error || 'No se pudo cancelar la reserva.');
-                }
-            });
-            actions.appendChild(cancelBtn);
-        }
-
-        if (req.estado === 'aceptada' && req.estado_viaje === 'completado') {
-            const detailsBtn = document.createElement('button');
-            detailsBtn.textContent = 'Ver Detalles';
-            detailsBtn.classList.add('details-btn'); 
-            detailsBtn.addEventListener('click', () => {
-                this.showTripDetailsModal(req);
-            });
-            actions.appendChild(detailsBtn);
-        }
-
-        card.appendChild(header);
-        card.appendChild(details);
-        if (actions.childNodes.length > 0) {
-            card.appendChild(actions);
-        }
-
-        return card;
-    }
-
-    showTripDetailsModal(trip) {
-        const tripDetailsElement = document.createElement('trip-details-wc');
-        
-     
-        const conductorData = {
-            name: trip.conductor_name,
-            email: trip.conductor_email
-        };
-
-        tripDetailsElement.trip = trip;
-        tripDetailsElement.user = conductorData;
-
-        document.body.appendChild(tripDetailsElement);
-    }
-
-    getStatusText(status) {
-        const statusMap = {
-            'pendiente': 'Pendiente',
-            'aceptada': 'Aceptada',
-            'rechazada': 'Rechazada'
-        };
-        return statusMap[status] || status;
-    }
-
-    filterRequests(filter) {
-        const list = this.shadowRoot.getElementById('bookings-list');
-        
-        if (filter === 'todas') {
-            this.renderRequests(this.requests, list);
-        } else if (filter === 'completados') {
-            const filtered = this.requests.filter(r => r.estado === 'aceptada' && r.estado_viaje === 'completado');
-            this.renderRequests(filtered, list);
-        } else {
-            const estadoMap = {
-                'pendientes': 'pendiente',
-                'aceptadas': 'aceptada',
-                'rechazadas': 'rechazada'
-            };
-            const estadoReal = estadoMap[filter];
-            const filtered = this.requests.filter(r => r.estado === estadoReal);
-            this.renderRequests(filtered, list);
-        }
+        const tripDetailsElement = document.createElement('passenger-trip-details-wc');
+        tripDetailsElement.trip = fullTripDetails;
+        tripDetailsElement.user = this.user; 
+        this.view.showTripDetailsModal(tripDetailsElement);
     }
 }
 

@@ -1,5 +1,3 @@
-/* frontend/public/components/dashboard/css/search-trips.css */
-
 .search-trips-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -147,7 +145,6 @@
     transform: none;
 }
 
-/* Estado vacío */
 .empty-state {
     text-align: center;
     padding: 3rem 2rem;

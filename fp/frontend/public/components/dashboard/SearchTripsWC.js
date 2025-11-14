@@ -1,41 +1,55 @@
-// frontend/public/components/dashboard/SearchTripsWC.js
 import { api } from '../../services/api.js';
 
-class SearchTripsWC extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-        this.trips = [];
-        this.handleSearch = this.handleSearch.bind(this);
-        this.handleRequestSeat = this.handleRequestSeat.bind(this);
+class SearchTripsService {
+    getAvailableTrips() {
+        return api.getAvailableTrips();
     }
 
-    connectedCallback() {
-        this.loadAvailableTrips();
+    searchTrips(filters) {
+        return api.searchTrips(filters);
     }
 
-    async loadAvailableTrips() {
-        const res = await api.getAvailableTrips();
-        if (res.success) {
-            this.trips = res.trips || [];
+    requestSeat(tripId, seatsToBook) {
+        return api.requestSeat(tripId, seatsToBook);
+    }
+}
+
+class SearchTripsView {
+    constructor(host) {
+        this.host = host;
+        this.shadowRoot = host.shadowRoot;
+        this.tripsListContainer = null;
+        this.searchForm = null;
+        this.origenInput = null;
+        this.destinoInput = null;
+        this.fechaInput = null;
+    }
+
+    dispatchEvent(eventName, detail) {
+        this.host.dispatchEvent(new CustomEvent(eventName, {
+            bubbles: true,
+            composed: true,
+            detail
+        }));
+    }
+
+    clearContainer(container) {
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
         }
-        this.render();
-        this.addEvents();
     }
 
-    render() {
-        this.shadowRoot.innerHTML = '';
+    render(trips) {
+        this.clearContainer(this.shadowRoot);
 
-        this.style.transition = 'opacity 0.3s ease-in-out';
-        this.style.opacity = '0';
+        this.host.style.transition = 'opacity 0.3s ease-in-out';
+        this.host.style.opacity = '0';
 
         const styles = document.createElement('link');
         styles.rel = 'stylesheet';
         styles.href = '/components/dashboard/css/search-trips.css';
-
-        styles.onload = () => {
-            this.style.opacity = '1';
-        };
+        styles.onload = () => { this.host.style.opacity = '1'; };
+        this.shadowRoot.appendChild(styles);
 
         const container = document.createElement('div');
         container.classList.add('search-trips-container');
@@ -43,69 +57,90 @@ class SearchTripsWC extends HTMLElement {
         const title = document.createElement('h2');
         title.textContent = 'Buscar Viajes';
 
-        const searchForm = document.createElement('form');
-        searchForm.id = 'search-form';
-        searchForm.classList.add('search-form');
-        // ... (código del formulario se mantiene igual) ...
-        const origenInput = document.createElement('input');
-        origenInput.type = 'text';
-        origenInput.name = 'origen';
-        origenInput.placeholder = 'Origen (ej: Mar del Plata)';
-        const destinoInput = document.createElement('input');
-        destinoInput.type = 'text';
-        destinoInput.name = 'destino';
-        destinoInput.placeholder = 'Destino (ej: Buenos Aires)';
-        const fechaInput = document.createElement('input');
-        fechaInput.type = 'date';
-        fechaInput.name = 'fecha';
-        fechaInput.placeholder = 'Fecha';
-        const searchBtn = document.createElement('button');
-        searchBtn.type = 'submit';
-        searchBtn.textContent = 'Buscar';
-        const clearBtn = document.createElement('button');
-        clearBtn.type = 'button';
-        clearBtn.textContent = 'Ver Todos';
-        clearBtn.classList.add('clear-btn');
-        clearBtn.addEventListener('click', () => {
-            searchForm.reset();
-            this.loadAvailableTrips();
-        });
-        searchForm.append(origenInput, destinoInput, fechaInput, searchBtn, clearBtn);
+        this.searchForm = this.createSearchForm();
+        container.appendChild(title);
+        container.appendChild(this.searchForm);
 
+        this.tripsListContainer = document.createElement('div');
+        this.tripsListContainer.classList.add('trips-list');
+        this.tripsListContainer.id = 'trips-list';
+        container.appendChild(this.tripsListContainer);
 
-        const tripsList = document.createElement('div');
-        tripsList.classList.add('trips-list');
-        tripsList.id = 'trips-list';
+        this.renderTrips(trips);
 
-        if (this.trips.length === 0) {
+        const backBtn = document.createElement('button');
+        backBtn.classList.add('back-btn');
+        backBtn.textContent = '← Volver al Dashboard';
+        backBtn.addEventListener('click', () => this.dispatchEvent('back-to-dashboard'));
+        container.appendChild(backBtn);
+
+        this.shadowRoot.appendChild(container);
+    }
+
+    createSearchForm() {
+        const form = document.createElement('form');
+        form.id = 'search-form';
+        form.classList.add('search-form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const filters = {
+                origen: this.origenInput.value.trim(),
+                destino: this.destinoInput.value.trim(),
+                fecha: this.fechaInput.value
+            };
+            this.dispatchEvent('search-submit', { filters });
+        });
+
+        this.origenInput = document.createElement('input');
+        this.origenInput.type = 'text';
+        this.origenInput.name = 'origen';
+        this.origenInput.placeholder = 'Origen (ej: Mar del Plata)';
+        
+        this.destinoInput = document.createElement('input');
+        this.destinoInput.type = 'text';
+        this.destinoInput.name = 'destino';
+        this.destinoInput.placeholder = 'Destino (ej: Buenos Aires)';
+        
+        this.fechaInput = document.createElement('input');
+        this.fechaInput.type = 'date';
+        this.fechaInput.name = 'fecha';
+        this.fechaInput.placeholder = 'Fecha';
+        
+        const searchBtn = document.createElement('button');
+        searchBtn.type = 'submit';
+        searchBtn.textContent = 'Buscar';
+        
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.textContent = 'Ver Todos';
+        clearBtn.classList.add('clear-btn');
+        clearBtn.addEventListener('click', () => {
+            form.reset();
+            this.dispatchEvent('clear-search');
+        });
+        
+        form.append(this.origenInput, this.destinoInput, this.fechaInput, searchBtn, clearBtn);
+        return form;
+    }
+
+    renderTrips(trips) {
+        this.clearContainer(this.tripsListContainer);
+
+        if (trips.length === 0) {
             const emptyState = document.createElement('div');
             emptyState.classList.add('empty-state');
-            
-            // --- CAMBIO: Se usan createElement en lugar de innerHTML ---
             const emptyTitle = document.createElement('h3');
             emptyTitle.textContent = 'No hay viajes disponibles';
             const emptyText = document.createElement('p');
             emptyText.textContent = 'Intenta buscar con otros filtros o vuelve más tarde';
             emptyState.append(emptyTitle, emptyText);
-
-            tripsList.appendChild(emptyState);
+            this.tripsListContainer.appendChild(emptyState);
         } else {
-            this.trips.forEach(trip => {
+            trips.forEach(trip => {
                 const card = this.createTripCard(trip);
-                tripsList.appendChild(card);
+                this.tripsListContainer.appendChild(card);
             });
         }
-
-        const backBtn = document.createElement('button');
-        backBtn.classList.add('back-btn');
-        backBtn.textContent = '← Volver al Dashboard';
-        backBtn.addEventListener('click', () => {
-            window.history.pushState({}, '', '/dashboard');
-            window.dispatchEvent(new Event('popstate'));
-        });
-
-        container.append(title, searchForm, tripsList, backBtn);
-        this.shadowRoot.append(styles, container);
     }
 
     createTripCard(trip) {
@@ -121,7 +156,7 @@ class SearchTripsWC extends HTMLElement {
 
         const price = document.createElement('div');
         price.classList.add('trip-price');
-        price.textContent = `$${parseFloat(trip.precio).toFixed(2)}`;
+        price.textContent = `${parseFloat(trip.precio).toFixed(2)}`;
 
         header.append(route, price);
 
@@ -157,6 +192,9 @@ class SearchTripsWC extends HTMLElement {
         requestBtn.textContent = 'Solicitar Asiento';
         requestBtn.classList.add('request-btn');
         requestBtn.dataset.tripId = trip.id;
+        requestBtn.addEventListener('click', () => {
+            this.dispatchEvent('request-seat-prompt', { trip });
+        });
 
         actions.appendChild(requestBtn);
 
@@ -164,72 +202,108 @@ class SearchTripsWC extends HTMLElement {
         return card;
     }
 
-    addEvents() {
-        const form = this.shadowRoot.getElementById('search-form');
-        if (form) {
-            form.addEventListener('submit', this.handleSearch);
+    showRequestSeatPrompt(trip) {
+        const seatsInput = prompt(`¿Cuántos asientos deseas solicitar para este viaje? (Máximo disponible: ${trip.asientos_disponibles})`, "1");
+        if (seatsInput !== null) {
+            const seatsToBook = Number(seatsInput);
+            this.dispatchEvent('request-seat', { tripId: trip.id, seatsToBook, trip });
         }
-
-        const requestBtns = this.shadowRoot.querySelectorAll('.request-btn');
-        requestBtns.forEach(btn => {
-            btn.addEventListener('click', this.handleRequestSeat);
-        });
     }
 
-    async handleSearch(e) {
-        e.preventDefault();
+    showAlert(message) {
+        alert(message); 
+    }
+}
 
-        const form = e.currentTarget;
-        const filters = {
-            origen: form.origen.value.trim(),
-            destino: form.destino.value.trim(),
-            fecha: form.fecha.value
-        };
+class SearchTripsWC extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.service = new SearchTripsService();
+        this.view = new SearchTripsView(this);
+        this.trips = [];
+    }
 
-        const res = await api.searchTrips(filters);
+    connectedCallback() {
+        this.loadAvailableTrips();
+        this.addEventListeners();
+    }
+
+    disconnectedCallback() {
+        this.removeEventListeners();
+    }
+
+    addEventListeners() {
+        this.addEventListener('search-submit', this.handleSearchSubmit);
+        this.addEventListener('clear-search', this.handleClearSearch);
+        this.addEventListener('request-seat-prompt', this.handleRequestSeatPrompt);
+        this.addEventListener('request-seat', this.handleRequestSeat);
+        this.addEventListener('back-to-dashboard', this.handleBackToDashboard);
+    }
+
+    removeEventListeners() {
+        this.removeEventListener('search-submit', this.handleSearchSubmit);
+        this.removeEventListener('clear-search', this.handleClearSearch);
+        this.removeEventListener('request-seat-prompt', this.handleRequestSeatPrompt);
+        this.removeEventListener('request-seat', this.handleRequestSeat);
+        this.removeEventListener('back-to-dashboard', this.handleBackToDashboard);
+    }
+
+    async loadAvailableTrips() {
+        const res = await this.service.getAvailableTrips();
         if (res.success) {
             this.trips = res.trips || [];
-            this.render();
-            this.addEvents();
         } else {
-            alert(res.error || 'Error al buscar viajes');
+            this.view.showAlert(res.error || 'Error al cargar viajes disponibles.');
         }
+        this.view.render(this.trips);
     }
 
-    async handleRequestSeat(e) {
-        const tripId = e.target.dataset.tripId;
-        const trip = this.trips.find(t => t.id == tripId);
-        
-        const seatsInput = prompt(`¿Cuántos asientos deseas solicitar para este viaje? (Máximo disponible: ${trip.asientos_disponibles})`, "1");
-
-        if (seatsInput === null) { 
-            return;
+    handleSearchSubmit = async (e) => {
+        const { filters } = e.detail;
+        const res = await this.service.searchTrips(filters);
+        if (res.success) {
+            this.trips = res.trips || [];
+        } else {
+            this.view.showAlert(res.error || 'Error al buscar viajes.');
         }
+        this.view.render(this.trips);
+    }
 
-        const seatsToBook = Number(seatsInput);
+    handleClearSearch = () => {
+        this.loadAvailableTrips();
+    }
+
+    handleRequestSeatPrompt = (e) => {
+        const { trip } = e.detail;
+        this.view.showRequestSeatPrompt(trip);
+    }
+
+    handleRequestSeat = async (e) => {
+        const { tripId, seatsToBook, trip } = e.detail;
 
         if (isNaN(seatsToBook) || seatsToBook <= 0) {
-            alert('Por favor, ingresa un número válido de asientos.');
+            this.view.showAlert('Por favor, ingresa un número válido de asientos.');
             return;
         }
         if (seatsToBook > trip.asientos_disponibles) {
-            alert(`No puedes solicitar más de ${trip.asientos_disponibles} asientos disponibles.`);
+            this.view.showAlert(`No puedes solicitar más de ${trip.asientos_disponibles} asientos disponibles.`);
             return;
         }
 
-        e.target.disabled = true;
-        e.target.textContent = 'Solicitando...';
-
-        const res = await api.requestSeat(tripId, seatsToBook);
+        const res = await this.service.requestSeat(tripId, seatsToBook);
 
         if (res.success) {
-            alert('Solicitud enviada correctamente. El conductor la revisará pronto.');
-            this.loadAvailableTrips();
+            this.view.showAlert('Solicitud enviada correctamente. El conductor la revisará pronto.');
+            this.loadAvailableTrips(); 
         } else {
-            alert(res.error || 'Error al solicitar asiento');
-            e.target.disabled = false;
-            e.target.textContent = 'Solicitar Asiento';
+            this.view.showAlert(res.error || 'Error al solicitar asiento');
         }
+    }
+
+    handleBackToDashboard = () => {
+        window.history.pushState({}, '', '/dashboard');
+        window.dispatchEvent(new Event('popstate'));
     }
 }
 

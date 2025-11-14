@@ -213,24 +213,26 @@
 
 .next-trip-card .stat-value {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: column; 
+    align-items: flex-start; 
     font-size: 1rem;
     line-height: 1.5;
+    text-align: left;
 }
 
 .next-trip-card .route {
     font-weight: bold;
     font-size: 1.1rem;
-    color: #333;
+    color: white;
 }
 
 .next-trip-card .date {
-    color: #00796b; 
+    color: #e0f2f1; 
     font-weight: 500;
 }
 
 .next-trip-card .driver {
     font-size: 0.9rem;
-    color: #555;
+    color: white;
+    opacity: 0.9;
 }

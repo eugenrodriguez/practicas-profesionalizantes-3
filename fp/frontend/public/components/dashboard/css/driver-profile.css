@@ -131,3 +131,15 @@ button[type="submit"]:disabled {
     color: #c62828;
     border: 2px solid #ef5350;
 }
+
+.toggle-password-btn {
+    background-color: #78909c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: background-color 0.3s;
+}
+.toggle-password-btn:hover { background-color: #607d8b; }

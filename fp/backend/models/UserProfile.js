@@ -1,4 +1,3 @@
-//backend/models/UserProfile.js:
 import { db } from '../config/db.js';
 import Rating from './Rating.js';
 import bcrypt from 'bcryptjs';

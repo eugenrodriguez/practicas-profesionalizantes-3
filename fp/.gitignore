@@ -1,5 +1,5 @@
 node_modules/
 .env
-carpooling_app(4).sql
 package.json
 package-lock.json
+mysql-data/

@@ -1,4 +1,3 @@
-//frontend/public/components/register/RegisterChoiceWC.js
 class RegisterChoiceWC extends HTMLElement {
     constructor() {
         super();
@@ -27,7 +26,6 @@ class RegisterChoiceWC extends HTMLElement {
         link.href = '/components/register/register.css';
 
         link.onload = () => {
-        // Cuando el CSS esta cargado completamente, mostramos el componente.
             this.style.opacity = '1'; 
         };
 

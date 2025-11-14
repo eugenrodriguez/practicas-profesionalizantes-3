@@ -1,4 +1,3 @@
-//frontend/public/components/register/DriverRegisterWC.js:
 import { api } from '../../services/api.js';
 
 class DriverRegisterWC extends HTMLElement {

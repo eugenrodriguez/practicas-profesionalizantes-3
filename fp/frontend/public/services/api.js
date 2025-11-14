@@ -1,4 +1,3 @@
-// frontend/public/services/api.js
 export class ApiClient {
     constructor(baseURL = '/api/v1') {
         this.baseURL = baseURL;
@@ -15,6 +14,11 @@ export class ApiClient {
             const result = await response.json().catch(() => ({}));
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    console.error('Error de autenticación (401). Redirigiendo al login.');
+                    window.location.href = '/login'; 
+                    return { success: false, error: 'No autorizado' }; 
+                }
                 return { success: false, error: result.error || `Error ${response.status}` };
             }
 
@@ -34,37 +38,36 @@ export class ApiClient {
     }
 
     async login(email, password) {
-        return this.request('/login', {
+        return this.request('/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password })
         });
     }
 
     async logout() {
-        return this.request('/logout', { method: 'POST' });
+        return this.request('/auth/logout', { method: 'POST' });
     }
 
     async registerDriver(name, email, password, licencia, patente, vehiculo) {
-        return this.request('/register/driver', {
+        return this.request('/auth/register/driver', {
             method: 'POST',
             body: JSON.stringify({ name, email, password, licencia, patente, vehiculo })
         });
     }
 
     async registerPassenger(name, email, password, telefono, direccion) {
-        return this.request('/register/passenger', {
+        return this.request('/auth/register/passenger', {
             method: 'POST',
             body: JSON.stringify({ name, email, password, telefono, direccion })
         });
     }
 
-    // Trips
     async createTrip(payload) {
         return this.request('/trips', { method: 'POST', body: JSON.stringify(payload) });
     }
 
     async getMyTrips() {
-        return this.request('/trips/my', { method: 'GET' });
+        return this.request('/profiles/me/trips', { method: 'GET' });
     }
 
     async getTripRequests(tripId) {
@@ -72,7 +75,7 @@ export class ApiClient {
     }
 
     async requestSeat(tripId, seats) {
-        return this.request(`/trips/${tripId}/request`, {
+        return this.request(`/trips/${tripId}/requests`, {
             method: 'POST',
             body: JSON.stringify({ asientos: seats })
         });
@@ -97,13 +100,12 @@ export class ApiClient {
         return this.request(`/trips/requests/${requestId}/cancel`, { method: 'POST' });
     }
 
-    // Profile
     async getProfile() {
-        return this.request('/profile', { method: 'GET' });
+        return this.request('/profiles/me', { method: 'GET' });
     }
 
     async updateProfile(data) {
-        return this.request('/profile', {
+        return this.request('/profiles/me', {
             method: 'PUT',
             body: JSON.stringify(data)
         });
@@ -140,7 +142,7 @@ export class ApiClient {
     }
 
     async getTripById(tripId) {
-        return this.request(`/trips/${tripId}`);
+        return this.request(`/trips/${tripId}`, { method: 'GET' });
     }
 
     async getPassengerCompletedTrips() {

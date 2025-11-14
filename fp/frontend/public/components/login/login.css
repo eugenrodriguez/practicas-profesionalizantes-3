@@ -1,9 +1,9 @@
 :host {
     --color-bg: #f8f9fa;
     --color-card: #ffffff;
-    --color-primary: #4db6ac;   /* aqua green */
+    --color-primary: #4db6ac;   
     --color-primary-dark: #00897b;
-    --color-accent: #ff6b5a;    /* coral */
+    --color-accent: #ff6b5a;   
     --color-text: #37474f;
     --color-text-light: #90a4ae;
     --radius: 180px;

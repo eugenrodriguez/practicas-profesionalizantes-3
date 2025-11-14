@@ -1,4 +1,3 @@
-//backend/controllers/tripController.js:
 import Trip from '../models/Trip.js';
 import { getSocketIo } from '../app.js';
 
@@ -88,6 +87,17 @@ export class TripController {
 
             const pasajeroId = user.id;
             const id = await Trip.createRequest(viajeId, pasajeroId, asientosSolicitados);
+
+            const trip = await Trip.getById(viajeId);
+            if (trip && trip.conductor_id) {
+                const io = getSocketIo();
+                io.to(`user-${trip.conductor_id}`).emit('newBookingRequest', {
+                    tripId: viajeId,
+                    tripOrigin: trip.origen,
+                    passengerName: user.name
+                });
+            }
+
             return res.status(201).json({ success: true, requestId: id });
         } catch (error) {
             console.error('Error creando solicitud:', error);
@@ -109,8 +119,30 @@ export class TripController {
                 return res.status(400).json({ success: false, error: 'Acción inválida' });
             }
 
+            const requestDetails = await Trip.getRequestById(requestId);
+            if (!requestDetails) {
+                return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
+            }
+
             await Trip.respondRequest(requestId, action);
-            return res.json({ success: true });
+
+            if (action === 'aceptar') {
+                const io = getSocketIo();
+                io.to(`user-${requestDetails.pasajero_id}`).emit('bookingAccepted', {
+                    tripId: requestDetails.viaje_id,
+                    tripOrigin: requestDetails.origen,
+                    tripDestination: requestDetails.destino
+                });
+            } else if (action === 'rechazar') {
+                const io = getSocketIo();
+                io.to(`user-${requestDetails.pasajero_id}`).emit('bookingRejected', {
+                    tripId: requestDetails.viaje_id,
+                    tripOrigin: requestDetails.origen,
+                    tripDestination: requestDetails.destino
+                });
+            }
+
+            return res.json({ success: true, message: `Solicitud ${action === 'aceptar' ? 'aceptada' : 'rechazada'}` });
         } catch (error) {
             console.error('Error respondiendo solicitud:', error);
             if (error.code === 'NO_SEATS') return res.status(400).json({ success: false, error: 'No hay asientos disponibles' });
@@ -299,7 +331,9 @@ export class TripController {
             if (error.code === 'UNAUTHORIZED') return res.status(403).json({ success: false, error: error.message });
             return res.status(500).json({ success: false, error: 'Error interno al cancelar la reserva' });
         }
-    }
+    } 
+
+
 }
 
 export default new TripController();

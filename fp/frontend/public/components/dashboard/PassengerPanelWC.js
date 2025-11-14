@@ -1,36 +1,37 @@
-// frontend/public/components/dashboard/PassengerPanelWC.js
 import { api } from '../../services/api.js';
 
-class PassengerPanelWC extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-        this.userProfile = null;
-        this.passengerBookings = [];
+class PassengerPanelService {
+    loadPanelData() {
+        return Promise.all([
+            api.getMyRequests(),
+            api.getProfile()
+        ]);
+    }
+}
+
+class PassengerPanelView {
+    constructor(host) {
+        this.host = host;
+        this.shadowRoot = host.shadowRoot;
     }
 
-    connectedCallback() {
-        this.loadPanelData();
+    dispatchEvent(eventName, detail) {
+        this.host.dispatchEvent(new CustomEvent(eventName, {
+            bubbles: true,
+            composed: true,
+            detail
+        }));
     }
 
-    async loadPanelData() {
-        try {
-            const [bookingsRes, profileRes] = await Promise.all([
-                api.getMyRequests(),
-                api.getProfile()
-            ]);
-
-            if (bookingsRes.success) this.passengerBookings = bookingsRes.requests || [];
-            if (profileRes.success) this.userProfile = profileRes.user;
-
-        } catch (err) {
-            console.error('Error cargando datos del panel de pasajero:', err);
+    clearContainer(container) {
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
         }
-        this.render();
     }
 
-    render() {
-        this.shadowRoot.innerHTML = ''; 
+    render(userProfile, passengerBookings) {
+        this.clearContainer(this.shadowRoot);
+
         const styles = document.createElement('link');
         styles.rel = 'stylesheet';
         styles.href = '/components/dashboard/css/dashboard.css';
@@ -44,12 +45,12 @@ class PassengerPanelWC extends HTMLElement {
         const statsContainer = document.createElement('div');
         statsContainer.classList.add('stats-container', 'passenger-stats');
 
-        const avgRating = this.userProfile?.calificacion_promedio ? parseFloat(this.userProfile.calificacion_promedio).toFixed(2) : 'N/A';
+        const avgRating = userProfile?.calificacion_promedio ? parseFloat(userProfile.calificacion_promedio).toFixed(2) : 'S/C';
 
         statsContainer.append(
             this.createStatCard('Tu Calificación', `${avgRating} `),
-            this.createNextTripCard(),
-            this.createHistoryCard()
+            this.createNextTripCard(passengerBookings),
+            this.createHistoryCard(passengerBookings)
         );
 
         const actions = document.createElement('div');
@@ -64,62 +65,62 @@ class PassengerPanelWC extends HTMLElement {
         this.shadowRoot.append(styles, section);
     }
 
-    createNextTripCard() {
-        const now = new Date();
-        const nextTrip = this.passengerBookings
-            .filter(b => b.estado === 'aceptada' && new Date(b.fecha_salida) > now)
+    createNextTripCard(passengerBookings) {
+        const nextTrip = (passengerBookings || [])
+            .filter(b => b.estado === 'aceptada' && b.estado_viaje !== 'completado' && b.estado_viaje !== 'cancelado')
             .sort((a, b) => new Date(a.fecha_salida) - new Date(b.fecha_salida))[0];
 
-        const card = this.createStatCard('Próximo Viaje', ''); 
-        card.classList.add('next-trip-card');
+        const card = document.createElement('div');
+        card.classList.add('stat-card', 'next-trip-card');
         
-        const valueEl = card.querySelector('.stat-value');
+        const valueEl = document.createElement('div');
+        valueEl.classList.add('stat-value');
+
+        const labelEl = document.createElement('div');
+        labelEl.classList.add('stat-label');
+        labelEl.textContent = 'Próximo Viaje';
 
         if (nextTrip) {
-            const fecha = new Date(nextTrip.fecha_salida);
-            const fechaStr = fecha.toLocaleString('es-AR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-            
             const routeSpan = document.createElement('span');
             routeSpan.className = 'route';
             routeSpan.textContent = `${nextTrip.origen} → ${nextTrip.destino}`;
 
             const dateSpan = document.createElement('span');
             dateSpan.className = 'date';
-            dateSpan.textContent = fechaStr;
+            const fecha = new Date(nextTrip.fecha_salida);
+            dateSpan.textContent = fecha.toLocaleString('es-AR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
             
             const driverSpan = document.createElement('span');
             driverSpan.className = 'driver';
             driverSpan.textContent = `Conductor: ${nextTrip.conductor_name}`;
 
-            valueEl.innerHTML = ''; 
             valueEl.append(routeSpan, dateSpan, driverSpan);
-
         } else {
             valueEl.textContent = 'No tienes viajes programados.';
             valueEl.style.fontSize = '1rem';
         }
+        
+        card.append(valueEl, labelEl);
         return card;
     }
     
-    createHistoryCard() {
-        const now = new Date();
-        const completedTrips = this.passengerBookings
-            .filter(b => b.estado === 'aceptada' && new Date(b.fecha_salida) < now).length;
-        
-        return this.createStatCard('Viajes Realizados', completedTrips);
+    createHistoryCard(passengerBookings) {
+        const completedTripsCount = (passengerBookings || []).filter(b => b.estado === 'aceptada' && b.estado_viaje === 'completado').length;
+        return this.createStatCard('Viajes Realizados', completedTripsCount);
     }
     
     createStatCard(label, value) {
         const card = document.createElement('div');
         card.classList.add('stat-card');
+        
         const valueEl = document.createElement('div');
         valueEl.classList.add('stat-value');
-
         valueEl.textContent = value;
         
         const labelEl = document.createElement('div');
         labelEl.classList.add('stat-label');
         labelEl.textContent = label;
+        
         card.append(valueEl, labelEl);
         return card;
     }
@@ -128,11 +129,59 @@ class PassengerPanelWC extends HTMLElement {
         const button = document.createElement('button');
         button.classList.add('action-button');
         button.textContent = text;
-        button.addEventListener('click', () => {
-            window.history.pushState({}, '', path);
-            window.dispatchEvent(new Event('popstate'));
-        });
+        button.addEventListener('click', () => this.dispatchEvent('navigate', { path }));
         return button;
+    }
+}
+
+class PassengerPanelWC extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        
+        this.service = new PassengerPanelService();
+        this.view = new PassengerPanelView(this);
+
+        this.state = {
+            userProfile: null,
+            passengerBookings: []
+        };
+    }
+
+    connectedCallback() {
+        this.loadPanelData();
+        this.addEventListeners();
+    }
+
+    disconnectedCallback() {
+        this.removeEventListeners();
+    }
+
+    addEventListeners() {
+        this.addEventListener('navigate', this.handleNavigation);
+    }
+
+    removeEventListeners() {
+        this.removeEventListener('navigate', this.handleNavigation);
+    }
+
+    handleNavigation = (e) => {
+        const path = e.detail.path;
+        window.history.pushState({}, '', path);
+        window.dispatchEvent(new Event('popstate'));
+    }
+
+    async loadPanelData() {
+        try {
+            const [bookingsRes, profileRes] = await this.service.loadPanelData();
+
+            if (bookingsRes.success) this.state.passengerBookings = bookingsRes.requests || [];
+            if (profileRes.success) this.state.userProfile = profileRes.user;
+
+        } catch (err) {
+            console.error('Error cargando datos del panel de pasajero:', err);
+        }
+        this.view.render(this.state.userProfile, this.state.passengerBookings);
     }
 }
 

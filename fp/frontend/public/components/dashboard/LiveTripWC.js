@@ -1,23 +1,15 @@
-// frontend/public/components/dashboard/LiveTripWC.js
 import { api } from '../../services/api.js';
 import { socketService } from '../../services/socketService.js';
 import { tripSimulationService } from '../../services/tripSimulationService.js';
-import './RatingWC.js'; // Importar el componente de rating
-
-/**
- * @class LiveTripService
- * @description Handles API interactions for live trip data.
- */
+import './RatingWC.js'; 
+import { Toast } from '../../utils/Toast.js';
+ 
 class LiveTripService {
     static async getTripById(tripId) {
         return await api.getTripById(tripId);
     }
 }
 
-/**
- * @class LiveTripSocketManager
- * @description Manages all socket communication for a live trip.
- */
 class LiveTripSocketManager {
     constructor() {
         this.componentListeners = [];
@@ -40,13 +32,13 @@ class LiveTripSocketManager {
             { event: 'tripStarted', handler: handleTripStarted },
             { event: 'tripEnded', handler: handleTripEnded }
         );
-        console.log('✅ Socket listeners configurados para viaje', tripId);
+        console.log('Socket listeners configurados para viaje', tripId);
     }
 
     removeListeners() {
         socketService.removeComponentListeners(this.componentListeners);
         this.componentListeners = [];
-        console.log('🔌 Socket listeners removidos.');
+        console.log('Socket listeners removidos.');
     }
 
     emitStartTrip(tripId) {
@@ -54,10 +46,6 @@ class LiveTripSocketManager {
     }
 }
 
-/**
- * @class LiveTripMapManager
- * @description Manages all Leaflet map interactions for a live trip.
- */
 class LiveTripMapManager {
     constructor(shadowRoot) {
         this.shadowRoot = shadowRoot;
@@ -149,7 +137,7 @@ class LiveTripMapManager {
             if (route && route.coordinates) {
                 this.routeCoordinates = route.coordinates;
                 this.isMapInitialized = true;
-                console.log('🔵 Mapa inicializado con', route.coordinates.length, 'puntos');
+                console.log('Mapa inicializado con', route.coordinates.length, 'puntos');
                 setupDriverControlsCallback();
             }
         });
@@ -169,7 +157,7 @@ class LiveTripMapManager {
         
         this.driverMarker = L.marker(startCoords, { icon: carIcon })
             .addTo(this.map)
-            .bindPopup('🚗 Conductor');
+            .bindPopup('Conductor');
 
         setTimeout(() => {
             if (this.map) {
@@ -209,10 +197,6 @@ class LiveTripMapManager {
     }
 }
 
-/**
- * @class LiveTripView
- * @description Manages the creation and state of the DOM elements for the live trip.
- */
 class LiveTripView {
     constructor(shadowRoot) {
         this.shadowRoot = shadowRoot;
@@ -220,90 +204,10 @@ class LiveTripView {
     }
 
     render(tripData, isDriver) {
-        const style = document.createElement('style');
-        style.textContent = `
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            .live-trip-container { 
-                padding: 20px; 
-                max-width: 1000px; 
-                margin: 0 auto; 
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            }
-            h2 { 
-                font-size: 1.75rem; 
-                color: #2c3e50; 
-                margin-bottom: 1.5rem; 
-                text-align: center; 
-            }
-            #map-container { 
-                background: white; 
-                border-radius: 12px; 
-                padding: 1rem; 
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
-            }
-            #map { 
-                height: 500px; 
-                width: 100%; 
-                background-color: #eee; 
-                border-radius: 8px; 
-            }
-            .car-icon { 
-                background: transparent !important; 
-                border: none !important; 
-            }
-            #driver-controls { 
-                display: none; 
-                gap: 10px; 
-                margin-top: 15px; 
-                justify-content: center; 
-                flex-wrap: wrap; 
-            }
-            .control-btn { 
-                padding: 12px 24px; 
-                border-radius: 8px; 
-                border: none; 
-                cursor: pointer; 
-                font-weight: 600; 
-                font-size: 1rem; 
-                transition: all 0.3s; 
-            }
-            .start-btn { 
-                background-color: #4CAF50; 
-                color: white; 
-            }
-            .start-btn:hover:not(:disabled) { 
-                background-color: #45a049; 
-                transform: translateY(-2px); 
-                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); 
-            }
-            .control-btn:disabled { 
-                background-color: #ccc; 
-                cursor: not-allowed; 
-                opacity: 0.6; 
-            }
-            #rating-container { 
-                display: none; 
-            }
-            .back-btn { 
-                display: block; 
-                width: 100%; 
-                max-width: 300px; 
-                margin: 20px auto 0; 
-                padding: 12px; 
-                background-color: #6c757d; 
-                color: white; 
-                border: none; 
-                border-radius: 8px; 
-                font-weight: 600; 
-                cursor: pointer; 
-                transition: all 0.3s; 
-            }
-            .back-btn:hover { 
-                background-color: #5a6268; 
-                transform: translateY(-2px); 
-            }
-        `;
-        this.shadowRoot.appendChild(style);
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/components/dashboard/css/live-trip.css';
+        this.shadowRoot.appendChild(link);
 
         const container = document.createElement('div');
         container.className = 'live-trip-container';
@@ -329,9 +233,14 @@ class LiveTripView {
         const ratingContainer = document.createElement('div');
         ratingContainer.id = 'rating-container';
 
+        const backBtn = document.createElement('button');
+        backBtn.classList.add('back-btn');
+        backBtn.textContent = '← Volver al Dashboard';
+
         container.appendChild(title);
         container.appendChild(mapContainer);
         container.appendChild(ratingContainer);
+        container.appendChild(backBtn);
 
         this.elements = {
             container,
@@ -339,7 +248,8 @@ class LiveTripView {
             mapDiv,
             driverControls,
             startBtn,
-            ratingContainer
+            ratingContainer,
+            backBtn
         };
         return container;
     }
@@ -366,7 +276,7 @@ class LiveTripView {
         } else if (status === 'en_curso') {
             startBtn.textContent = 'Viaje en Curso';
             startBtn.disabled = true;
-        } else { // 'activo' o 'pendiente'
+        } else { 
             startBtn.textContent = 'Iniciar Viaje';
             startBtn.disabled = false;
         }
@@ -400,13 +310,16 @@ class LiveTripView {
             ratingContainer.removeChild(ratingContainer.firstChild);
         }
         ratingContainer.appendChild(ratingComponent);
+        this.elements.ratingComponent = ratingComponent;
+    }
+
+    updateRatingComponentUser(user) {
+        if (this.elements.ratingComponent) {
+            this.elements.ratingComponent.user = user;
+        }
     }
 }
 
-/**
- * @class LiveTripWC
- * @description Web component for tracking a live trip. Acts as a controller.
- */
 class LiveTripWC extends HTMLElement {
     constructor() {
         super();
@@ -423,10 +336,7 @@ class LiveTripWC extends HTMLElement {
         this._user = userData;
         if (this.isConnected && this.tripData && this.mapManager.isMapInitialized) {
             this.view.setupDriverControls(this.user.id === this.tripData.conductor_id, this.tripData.estado);
-        }
-        const ratingComponent = this.shadowRoot.querySelector('rating-wc');
-        if (ratingComponent) {
-            ratingComponent.user = userData;
+            this.view.updateRatingComponentUser(userData);
         }
     }
 
@@ -463,11 +373,11 @@ class LiveTripWC extends HTMLElement {
     }
 
     disconnectedCallback() {
-        console.log('🔌 Componente LiveTripWC desconectándose...');
+        console.log('Componente LiveTripWC desconectándose...');
         this.socketManager.removeListeners();
         this.mapManager.removeMap();
         this.removeEventListeners();
-        console.log('✅ Componente desconectado, simulación sigue activa');
+        console.log('Componente desconectado, simulación sigue activa');
     }
 
     render() {
@@ -480,20 +390,31 @@ class LiveTripWC extends HTMLElement {
 
     addEventListeners() {
         this.view.elements.startBtn.addEventListener('click', this.handleStartTripClick.bind(this));
+        this.view.elements.backBtn.addEventListener('click', this.handleBackClick.bind(this));
     }
 
     removeEventListeners() {
         this.view.elements.startBtn.removeEventListener('click', this.handleStartTripClick.bind(this));
+        this.view.elements.backBtn.removeEventListener('click', this.handleBackClick.bind(this));
     }
 
     handleStartTripClick() {
+        const activeSimulations = tripSimulationService.getActiveSimulations();
+        if (activeSimulations.length > 0 && !activeSimulations.includes(this.tripId)) {
+            Toast.show('Ya tienes un viaje en curso. Finalízalo antes de iniciar otro.', 'warning');
+            return;
+        }
+
         if (confirm('¿Estás seguro de iniciar el viaje? La simulación continuará en segundo plano.')) {
             this.socketManager.emitStartTrip(this.tripId);
             this.startSimulation();
         }
     }
 
-
+    handleBackClick() {
+        window.history.pushState({}, '', '/dashboard');
+        window.dispatchEvent(new Event('popstate'));
+    }
 
     setupSocketListeners() {
         this.socketManager.setupListeners(this.tripId, {
@@ -511,13 +432,25 @@ class LiveTripWC extends HTMLElement {
                 this.view.showRatingUI(this.tripData, this.user);
             }
         });
+
+        const handleTripStartError = (data) => {
+            Toast.show(data.error, 'error');
+            tripSimulationService.stopSimulation(this.tripId);
+            this.view.updateStartButton(this.tripData.estado);
+        };
+
+        socketService.on('tripStartError', handleTripStartError);
+        
+        this.socketManager.componentListeners.push(
+            { event: 'tripStartError', handler: handleTripStartError }
+        );
     }
 
     startSimulation() {
         const routeCoordinates = this.mapManager.getRouteCoordinates();
         if (!routeCoordinates || routeCoordinates.length === 0) {
             console.warn('No hay coordenadas de ruta para simular');
-            alert('No se pudo iniciar la simulación. No hay coordenadas disponibles.');
+            Toast.show('No se pudo iniciar la simulación. No hay coordenadas disponibles.', 'error');
             return;
         }
 
@@ -527,11 +460,11 @@ class LiveTripWC extends HTMLElement {
         );
 
         if (success) {
-            console.log('✅ Simulación iniciada correctamente en segundo plano');
-            alert('Viaje iniciado. La simulación continuará aunque salgas de esta vista.');
+            console.log('Simulación iniciada correctamente en segundo plano');
+            Toast.show('Viaje iniciado. La simulación continuará en segundo plano.', 'success');
         } else {
-            console.error('❌ Error al iniciar la simulación');
-            alert('Error al iniciar la simulación.');
+            console.error('Error al iniciar la simulación');
+            Toast.show('Error al iniciar la simulación.', 'error');
         }
     }
 }

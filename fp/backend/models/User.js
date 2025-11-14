@@ -1,4 +1,3 @@
-//backend/models/User.js
 import bcrypt from 'bcryptjs';
 import { db } from '../config/db.js';
 

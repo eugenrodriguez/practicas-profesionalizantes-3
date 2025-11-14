@@ -1,4 +1,3 @@
-//backend/models/Trip.js:
 import { db } from '../config/db.js';
 
 class Trip {
@@ -34,7 +33,17 @@ class Trip {
                  WHERE sv.viaje_id = v.id AND sv.estado = 'pendiente') AS solicitudes_pendientes
             FROM viajes v
             WHERE v.conductor_id = ? 
-            ORDER BY v.fecha_salida DESC
+            ORDER BY 
+                CASE v.estado
+                    WHEN 'pendiente' THEN 1
+                    WHEN 'activo' THEN 2
+                    WHEN 'en_curso' THEN 3
+                    WHEN 'completado' THEN 4
+                    WHEN 'cancelado' THEN 5
+                    ELSE 99
+                END ASC,
+                CASE WHEN v.estado IN ('completado', 'cancelado') THEN v.fecha_salida END DESC,
+                CASE WHEN v.estado NOT IN ('completado', 'cancelado') THEN v.fecha_salida END ASC
         `;
         return db.query(sql, [conductorId]);
     }
@@ -71,7 +80,7 @@ class Trip {
         for (let i = 0; i < route.length - 1; i++) {
             const start = route[i];
             const end = route[i+1];
-            const segments = 50; // Puntos intermedios
+            const segments = 50; 
             for (let j = 0; j <= segments; j++) {
                 interpolatedRoute.push({ lat: start.lat + (end.lat - start.lat) * (j / segments), lng: start.lng + (end.lng - start.lng) * (j / segments) });
             }
@@ -86,17 +95,22 @@ class Trip {
     }
 
     async getTripWithParticipants(id) {
-        const sql = `SELECT v.*, u.name as conductor_name 
+        const sql = `SELECT v.*, 
+                            u.name as conductor_name, u.email as conductor_email,
+                            c.vehiculo, c.patente,
+                            (v.asientos_disponibles + IFNULL((SELECT SUM(sv.asientos_solicitados) FROM solicitudes_viaje sv WHERE sv.viaje_id = v.id AND sv.estado = 'aceptada'), 0)) as asientos_ofrecidos
                      FROM viajes v
                      JOIN users u ON v.conductor_id = u.id
+                     JOIN conductores c ON v.conductor_id = c.id
                      WHERE v.id = ?`;
+
         const tripRes = await db.query(sql, [id]);
         const trip = tripRes[0];
 
         if (!trip) return null;
 
         const passengersSql = `
-            SELECT u.id, u.name
+            SELECT u.id, u.name, sv.asientos_solicitados
             FROM solicitudes_viaje sv
             JOIN users u ON sv.pasajero_id = u.id
             WHERE sv.viaje_id = ? AND sv.estado = 'aceptada'
@@ -118,12 +132,26 @@ class Trip {
             
             const sqlUpdate = 'UPDATE solicitudes_viaje SET asientos_solicitados = ?, estado = "pendiente" WHERE id = ?';
             await db.query(sqlUpdate, [newSeatCount, requestId]);
-            return requestId; // Devolvemos el ID de la solicitud actualizada
+            return requestId; 
         } else {
             const sqlInsert = 'INSERT INTO solicitudes_viaje (viaje_id, pasajero_id, asientos_solicitados) VALUES (?, ?, ?)';
             const res = await db.query(sqlInsert, [viajeId, pasajeroId, asientosSolicitados]);
             return res.insertId;
         }
+    }
+
+    async getRequestById(requestId) {
+        const sql = `
+            SELECT 
+                sv.pasajero_id,
+                v.id as viaje_id,
+                v.origen,
+                v.destino
+            FROM solicitudes_viaje sv
+            JOIN viajes v ON sv.viaje_id = v.id
+            WHERE sv.id = ?`;
+        const result = await db.query(sql, [requestId]);
+        return result[0] || null;
     }
 
     async getRequestsByTrip(viajeId) {
@@ -242,7 +270,8 @@ class Trip {
                         v.origen, 
                         v.destino,
                         v.id as viaje_id,
-                        u.name as pasajero_name
+                        u.name as pasajero_name,
+                        sv.pasajero_id
                      FROM solicitudes_viaje sv
                      JOIN viajes v ON sv.viaje_id = v.id
                      JOIN pasajeros p ON sv.pasajero_id = p.id
@@ -268,6 +297,14 @@ class Trip {
         const sql = `SELECT pasajero_id FROM solicitudes_viaje WHERE viaje_id = ? AND estado = 'aceptada'`;
         const results = await db.query(sql, [tripId]);
         return results.map(r => r.pasajero_id);
+    }
+
+    async getActiveTripByDriver(conductorId) {
+        const sql = `SELECT * FROM viajes 
+                    WHERE conductor_id = ? AND estado = 'en_curso' 
+                    LIMIT 1`;
+        const res = await db.query(sql, [conductorId]);
+        return res[0] || null;
     }
 }
 

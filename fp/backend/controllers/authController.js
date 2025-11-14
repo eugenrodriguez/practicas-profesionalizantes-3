@@ -1,10 +1,20 @@
-//backend/controllers/authController.js:
 import User from '../models/User.js';
 import DriverUser from '../models/driverUser.js';
 import PassengerUser from '../models/passengerUser.js';
 import { SessionService } from '../services/SessionService.js';
 
 const sessionService = new SessionService();
+
+export function validatePassword(password) {
+    const passwordRequirements = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]).{8,16}$/;
+    if (!passwordRequirements.test(password)) {
+        return {
+            isValid: false,
+            message: 'La contraseña debe tener entre 8 y 16 caracteres, incluir al menos una mayúscula, un número y un símbolo especial.'
+        };
+    }
+    return { isValid: true };
+}
 
 export async function login(req, res) {
     try {
@@ -43,6 +53,11 @@ export function logout(req, res) {
 export async function driverRegister(req, res) {
     try {
         const { name, email, password, licencia, patente, vehiculo } = req.body;
+
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({ error: passwordValidation.message });
+        }
         
         const existingUser = await User.findUserByEmail(email);
         
@@ -61,14 +76,14 @@ export async function driverRegister(req, res) {
                 existingUser.roles
             );
             await driver.register(existingUser.id);
-            return _loginUser(res, existingUser, 'conductor', 'Rol de conductor agregado exitosamente'); // REFACTOR
+            return _loginUser(res, existingUser, 'conductor', 'Rol de conductor agregado exitosamente'); 
         }
         
         const driver = new DriverUser(name, email, password, licencia, patente, vehiculo);
         await driver.register();
 
         const newUser = await User.findUserByEmail(email);
-        return _loginUser(res, newUser, null, 'Registro de conductor exitoso'); // REFACTOR
+        return _loginUser(res, newUser, null, 'Registro de conductor exitoso'); 
     } catch (error) {
         if (error.code === 'DUP_EMAIL') {
             return res.status(400).json({ error: 'El email ya está registrado' });
@@ -94,6 +109,11 @@ function _loginUser(res, user, newRole = null, message) {
 export async function passengerRegister(req, res) {
     try {
         const { name, email, password, telefono, direccion } = req.body;
+
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({ error: passwordValidation.message });
+        }
         
         const existingUser = await User.findUserByEmail(email);
         

@@ -1,4 +1,3 @@
-//frontend/public/components/login/LoginFormWC.js
 import { api } from '../../services/api.js';
 
 class LoginFormWC extends HTMLElement {

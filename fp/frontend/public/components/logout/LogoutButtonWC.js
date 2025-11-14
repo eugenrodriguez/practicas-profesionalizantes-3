@@ -1,4 +1,3 @@
-// frontend/public/components/logout/LogoutButtonWC.js
 import { api } from '../../services/api.js';
 
 class LogoutButtonWC extends HTMLElement {

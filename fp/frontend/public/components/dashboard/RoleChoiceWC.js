@@ -1,9 +1,8 @@
-// frontend/public/components/dashboard/RoleChoiceWC.js
-
 class RoleChoiceWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this.roleButtons = [];
     }
 
     connectedCallback() {
@@ -21,6 +20,11 @@ class RoleChoiceWC extends HTMLElement {
         container.classList.add('role-choice-container'); 
         container.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh;';
 
+        const logo = document.createElement('img');
+        logo.src = '/img/logo.png';
+        logo.alt = 'CaminoComun Logo';
+        logo.style.cssText = 'width: 300px; margin-bottom: 20px;';
+
         const title = document.createElement('h1');
         title.textContent = 'Selecciona tu rol';
         title.style.marginBottom = '30px';
@@ -28,7 +32,9 @@ class RoleChoiceWC extends HTMLElement {
         const driverBtn = this.createRoleButton('Ingresar como Conductor', 'conductor');
         const passengerBtn = this.createRoleButton('Ingresar como Pasajero', 'pasajero');
 
-        container.append(title, driverBtn, passengerBtn);
+        this.roleButtons = [driverBtn, passengerBtn];
+
+        container.append(logo, title, driverBtn, passengerBtn);
         this.shadowRoot.append(styles, container);
     }
 
@@ -43,7 +49,7 @@ class RoleChoiceWC extends HTMLElement {
     }
 
     addEvents() {
-        this.shadowRoot.querySelectorAll('button').forEach(button => {
+        this.roleButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 const role = e.target.dataset.role;
                 sessionStorage.setItem('currentRole', role);

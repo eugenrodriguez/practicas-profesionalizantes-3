@@ -1,84 +1,6 @@
-// frontend/public/components/dashboard/TripRequestsWC.js
 import { api } from '../../services/api.js';
 
-class TripRequestsWC extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-        this.tripId = null; 
-        this.requests = [];
-        this.mode = 'single'; 
-        this.renderer = new TripRequestsRenderer(this.shadowRoot, this.handleResponse.bind(this));
-    }
-
-    connectedCallback() {
-        const params = new URLSearchParams(window.location.search);
-        this.tripId = params.get('trip');
-        this.mode = this.tripId ? 'single' : 'all'; 
-        this.load();
-    }
-
-    async load() {
-        this.shadowRoot.innerHTML = ''; // Clear previous content
-
-        this.style.transition = 'opacity 0.3s ease-in-out';
-        this.style.opacity = '0';
-
-        const styles = document.createElement('link');
-        styles.rel = 'stylesheet';
-        styles.href = '/components/dashboard/css/trip-requests.css';
-
-        styles.onload = () => { this.style.opacity = '1'; };
-
-        const container = document.createElement('div');
-        container.classList.add('requests-container'); 
-
-        const title = document.createElement('h2');
-        title.textContent = this.mode === 'single' ? 'Solicitudes del Viaje' : 'Todas mis Solicitudes';
-
-        const apiCall = this.mode === 'single' 
-            ? api.getTripRequests(this.tripId) 
-            : api.getAllDriverRequests();
-
-        const res = await apiCall;
-
-        if (!res.success) {
-            const error = document.createElement('p');
-            error.textContent = res.error || 'Error al cargar solicitudes';
-            container.append(title, error);
-            this.shadowRoot.append(styles, container);
-            return;
-        }
-
-        this.requests = res.requests || [];
-
-        this.renderer.render(this.requests, this.mode, container);
-
-        const backBtn = document.createElement('button');
-        backBtn.classList.add('back-btn');
-        backBtn.textContent = this.mode === 'single' ? '← Volver a Mis Viajes' : '← Volver al Dashboard';
-        backBtn.addEventListener('click', () => {
-            const path = this.mode === 'single' ? '/dashboard/my-trips' : '/dashboard';
-            window.history.pushState({}, '', path);
-            window.dispatchEvent(new Event('popstate'));
-        });
-
-        container.append(title, this.renderer.getListElement(), backBtn);
-        this.shadowRoot.append(styles, container);
-    }
-
-    async handleResponse(requestId, action) {
-        const res = await api.respondRequest(requestId, action);
-        if (res.success) {
-            alert(`Solicitud ${action === 'aceptar' ? 'aceptada' : 'rechazada'}.`);
-            this.load();
-        } else {
-            alert(res.error || 'Error al procesar la solicitud.');
-        }
-    }
-}
-
-class TripRequestsRenderer {
+class TripRequestsView {
     constructor(shadowRoot, handleResponseCallback) {
         this.shadowRoot = shadowRoot;
         this.handleResponseCallback = handleResponseCallback;
@@ -91,7 +13,7 @@ class TripRequestsRenderer {
     }
 
     render(requests, mode, container) {
-        this.listElement.innerHTML = ''; // Clear previous list content
+        this.listElement.innerHTML = ''; 
 
         if (requests.length === 0) {
             const emptyState = document.createElement('div');
@@ -154,6 +76,83 @@ class TripRequestsRenderer {
 
         card.append(name, details, actions);
         return card;
+    }
+}
+
+class TripRequestsWC extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.tripId = null; 
+        this.requests = [];
+        this.mode = 'single'; 
+        this.renderer = new TripRequestsView(this.shadowRoot, this.handleResponse.bind(this));
+    }
+
+    connectedCallback() {
+        const params = new URLSearchParams(window.location.search);
+        this.tripId = params.get('trip');
+        this.mode = this.tripId ? 'single' : 'all'; 
+        this.load();
+    }
+
+    async load() {
+        this.shadowRoot.innerHTML = ''; 
+
+        this.style.transition = 'opacity 0.3s ease-in-out';
+        this.style.opacity = '0';
+
+        const styles = document.createElement('link');
+        styles.rel = 'stylesheet';
+        styles.href = '/components/dashboard/css/trip-requests.css';
+
+        styles.onload = () => { this.style.opacity = '1'; };
+
+        const container = document.createElement('div');
+        container.classList.add('requests-container'); 
+
+        const title = document.createElement('h2');
+        title.textContent = this.mode === 'single' ? 'Solicitudes del Viaje' : 'Todas mis Solicitudes';
+
+        const apiCall = this.mode === 'single' 
+            ? api.getTripRequests(this.tripId) 
+            : api.getAllDriverRequests();
+
+        const res = await apiCall;
+
+        if (!res.success) {
+            const error = document.createElement('p');
+            error.textContent = res.error || 'Error al cargar solicitudes';
+            container.append(title, error);
+            this.shadowRoot.append(styles, container);
+            return;
+        }
+
+        this.requests = res.requests || [];
+
+        this.renderer.render(this.requests, this.mode, container);
+
+        const backBtn = document.createElement('button');
+        backBtn.classList.add('back-btn');
+        backBtn.textContent = this.mode === 'single' ? '← Volver a Mis Viajes' : '← Volver al Dashboard';
+        backBtn.addEventListener('click', () => {
+            const path = this.mode === 'single' ? '/dashboard/my-trips' : '/dashboard';
+            window.history.pushState({}, '', path);
+            window.dispatchEvent(new Event('popstate'));
+        });
+
+        container.append(title, this.renderer.getListElement(), backBtn);
+        this.shadowRoot.append(styles, container);
+    }
+
+    async handleResponse(requestId, action) {
+        const res = await api.respondRequest(requestId, action);
+        if (res.success) {
+            alert(`Solicitud ${action === 'aceptar' ? 'aceptada' : 'rechazada'}.`);
+            this.load();
+        } else {
+            alert(res.error || 'Error al procesar la solicitud.');
+        }
     }
 }
 

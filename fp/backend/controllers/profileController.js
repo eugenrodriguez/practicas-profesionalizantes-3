@@ -1,5 +1,5 @@
-//backend/controllers/profileController.js
 import UserProfile from '../models/UserProfile.js';
+import { validatePassword } from './authController.js';
 
 export class ProfileController {
     async updateProfile(req, res) {
@@ -10,6 +10,12 @@ export class ProfileController {
 
             if (newPassword && !currentPassword) {
                 return res.status(400).json({ success: false, error: 'Debe ingresar la contraseña actual para cambiarla' });
+            }
+            if (newPassword) {
+                const passwordValidation = validatePassword(newPassword);
+                if (!passwordValidation.isValid) {
+                    return res.status(400).json({ success: false, error: passwordValidation.message });
+                }
             }
 
             const updateData = {
@@ -28,7 +34,7 @@ export class ProfileController {
             console.error('Error actualizando perfil:', error);
             
             if (error.code === 'INVALID_PASSWORD') {
-                return res.status(401).json({ success: false, error: 'Contraseña actual incorrecta' });
+                return res.status(400).json({ success: false, error: 'Contraseña actual incorrecta' });
             }
             
             return res.status(500).json({ success: false, error: 'Error interno al actualizar perfil' });

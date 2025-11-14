@@ -1,4 +1,3 @@
-//frontend/public/components/register/PassengerRegisterWC.js:
 import { api } from '../../services/api.js';
 
 class PassengerRegisterWC extends HTMLElement {

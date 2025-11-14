@@ -1,4 +1,3 @@
-//backend/config/db.js:
 import mysql from 'mysql';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,22 +8,26 @@ dotenv.config({ path: path.join(__dirname, '../env/.env') });
 
 export class Database {
     constructor() {
-        this.connection = mysql.createConnection({
+        this.pool = mysql.createPool({
+            connectionLimit: 10, 
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
             database: process.env.DB_DATABASE
         });
 
-        this.connection.connect(err => {
-            if (err) console.log('Error de conexión:', err);
-            else console.log('CONEXIÓN A LA BASE DE DATOS EXITOSA!');
+        this.pool.getConnection((err, connection) => {
+            if (err) console.log('Error al obtener conexión del pool:', err);
+            if (connection) {
+                console.log('CONEXIÓN A LA BASE DE DATOS EXITOSA!');
+                connection.release(); 
+            }
         });
     }
 
     query(sql, values = []) {
         return new Promise((resolve, reject) => {
-            this.connection.query(sql, values, (err, results) => {
+            this.pool.query(sql, values, (err, results) => {
                 if (err) reject(err);
                 else resolve(results);
             });

@@ -14,7 +14,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Signika', sans-serif;
-    background-color: #a7d6d1; 
+    background-color: #d6fffc; 
     color: #333;
 }
 
@@ -45,3 +45,5 @@ a:hover {
     padding: 50px;
     text-align: center;
 }
+
+

@@ -1,13 +1,11 @@
 import { api } from '../../services/api.js';
 
-// --- Service Class: Handles all API interactions ---
 class PassengerTripDetailsService {
     submitRating(tripId, driverId, rating, comment) {
         return api.submitRating(tripId, driverId, rating, comment);
     }
 }
 
-// --- View Class: Manages DOM creation and updates, emits events ---
 class PassengerTripDetailsView {
     constructor(host) {
         this.host = host;
@@ -73,7 +71,6 @@ class PassengerTripDetailsView {
         const modalBody = document.createElement('div');
         modalBody.classList.add('modal-body');
 
-        // Trip Details
         modalBody.appendChild(this.createDetail('Origen', trip.origen));
         modalBody.appendChild(this.createDetail('Destino', trip.destino));
         const fecha = new Date(trip.fecha_salida);
@@ -83,13 +80,11 @@ class PassengerTripDetailsView {
 
         modalBody.appendChild(document.createElement('hr'));
         
-        // Driver Details
         const conductorSection = this.createConductorSection(trip);
         modalBody.appendChild(conductorSection);
 
         modalBody.appendChild(document.createElement('hr'));
 
-        // Other Passengers
         const pasajerosTitle = document.createElement('h4');
         pasajerosTitle.textContent = 'Compañeros de Viaje';
         modalBody.appendChild(pasajerosTitle);
@@ -208,7 +203,6 @@ class PassengerTripDetailsView {
     }
 }
 
-// --- Controller Class: The Web Component itself ---
 class PassengerTripDetailsWC extends HTMLElement {
     constructor() {
         super();
@@ -288,7 +282,7 @@ class PassengerTripDetailsWC extends HTMLElement {
 
         if (res.success) {
             this.view.showRatingSuccess(this._trip.conductor_name);
-            setTimeout(() => this.close(), 2000); // Cierra el modal después de 2 segundos
+            setTimeout(() => this.close(), 2000);
         } else {
             this.view.showRatingError(res.error || 'No se pudo enviar el comentario.');
         }

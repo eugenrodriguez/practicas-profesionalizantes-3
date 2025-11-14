@@ -1,4 +1,3 @@
-//backend/models/driverUser.js:
 import User from './User.js';
 import { db } from '../config/db.js';
 

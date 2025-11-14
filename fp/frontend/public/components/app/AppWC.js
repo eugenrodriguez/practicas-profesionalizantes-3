@@ -1,4 +1,3 @@
-//frontend/public/components/app/AppWC.js:
 import '../login/LoginFormWC.js';
 import '../register/RegisterChoiceWC.js';
 import '../register/DriverRegisterWC.js';
@@ -13,16 +12,19 @@ import '../dashboard/SearchTripsWC.js';
 import '../dashboard/MyBookingsWC.js';
 import '../dashboard/PassengerProfileWC.js';
 import '../dashboard/RoleChoiceWC.js'; 
+import '../dashboard/PassengerTripDetailsWC.js';
 import '../dashboard/LiveTripWC.js'; 
-
 import { api } from '../../services/api.js';
+import { socketService } from '../../services/socketService.js'; 
+import { Toast } from '../../utils/Toast.js';
 
 class AppWC extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         this.routeChangeHandler = this.routeChangeHandler.bind(this);
-
+        this.mainContainer = null;
+    
         this.routes = {
             '/': { component: 'login-form-wc', auth: false },
             '/login': { component: 'login-form-wc', auth: false },
@@ -30,7 +32,6 @@ class AppWC extends HTMLElement {
             '/register/driver': { component: 'driver-register-wc', auth: false },
             '/register/passenger': { component: 'passenger-register-wc', auth: false },
             
-            // Rutas que requieren autenticación
             '/dashboard': { component: 'dashboard-wc', auth: true }, 
             '/dashboard/create-trip': { component: 'create-trip-wc', auth: true },
             '/dashboard/my-trips': { component: 'my-trips-wc', auth: true },
@@ -39,19 +40,88 @@ class AppWC extends HTMLElement {
             '/dashboard/search-trips': { component: 'search-trips-wc', auth: true },
             '/dashboard/my-bookings': { component: 'my-bookings-wc', auth: true },
             '/dashboard/passenger-profile': { component: 'passenger-profile-wc', auth: true },
-            '/dashboard/live-trip': { component: 'live-trip-wc', auth: true }, // <- AÑADE ESTA RUTA
+            '/dashboard/live-trip': { component: 'live-trip-wc', auth: true },
         };
         
         this.notFoundComponent = 'not-found-view'; 
     }
 
     connectedCallback() {
+        console.log('Inicializando aplicación...');
+        socketService.connect();
+        console.log('Socket global inicializado');
+
+        this.renderLayout();
         this.routeChangeHandler();
+        this.setupGlobalSocketListeners();
         window.addEventListener('popstate', this.routeChangeHandler);
+
+        window.addEventListener('online', () => {
+            console.log('Conexión a internet restaurada, reconectando socket...');
+            socketService.connect();
+        });
     }
 
     disconnectedCallback() {
         window.removeEventListener('popstate', this.routeChangeHandler);
+        socketService.removeComponentListeners([
+            { event: 'bookingAccepted' },
+            { event: 'tripHasStarted' },
+            { event: 'tripCancelled' },
+            { event: 'newBookingRequest' },
+            { event: 'bookingRejected' }
+        ]);
+    }
+
+    setupGlobalSocketListeners() {
+        socketService.on('bookingAccepted', (data) => {
+            Toast.show(`¡Tu reserva para el viaje a ${data.tripDestination} fue aceptada!`, 'success');
+        });
+
+        socketService.on('tripHasStarted', (data) => {
+            Toast.show(`¡El viaje hacia ${data.tripDestination} ha comenzado!`, 'info');
+        });
+
+        socketService.on('tripCancelled', (data) => {
+            Toast.show(`El viaje de ${data.tripOrigin} a ${data.tripDestination} fue cancelado por el conductor.`, 'warning');
+        });
+
+        socketService.on('newBookingRequest', (data) => {
+            Toast.show(`¡Tienes una nueva solicitud de viaje de ${data.passengerName}!`, 'info');
+        });
+
+        socketService.on('bookingRejected', (data) => {
+            Toast.show(`Tu solicitud para el viaje a ${data.tripDestination} fue rechazada.`, 'warning');
+        });
+    }
+
+    renderLayout() {
+        const styles = document.createElement('style');
+        styles.textContent = `
+            .logo {
+                display: block;
+                margin-top: 20px;
+                margin-bottom: 20px;
+                margin-left: auto;
+                margin-right: auto;
+                width: 300px;
+                max-width: 80%;
+            }
+        `;
+
+        const logo = document.createElement('img');
+        logo.src = '/img/logo.png';
+        logo.alt = 'CaminoComun Logo';
+        logo.classList.add('logo');
+
+        this.mainContainer = document.createElement('div');
+        this.mainContainer.classList.add('app-main-content');
+
+        const linkElem = document.createElement('link');
+        linkElem.rel = 'stylesheet';
+        linkElem.href = '/css/styles.css';
+
+        this.shadowRoot.append(styles, linkElem, logo, this.mainContainer);
     }
 
     navigateTo(path) {
@@ -104,14 +174,8 @@ class AppWC extends HTMLElement {
     }
 
     renderView(componentName, user = null) {
-        this.shadowRoot.innerHTML = '';
-
-        const linkElem = document.createElement('link');
-        linkElem.rel = 'stylesheet';
-        linkElem.href = '/css/styles.css';
-
-        const mainContainer = document.createElement('div');
-        mainContainer.classList.add('app-main-content');
+        if (!this.mainContainer) this.renderLayout();
+        this.mainContainer.innerHTML = '';
 
         if (componentName !== this.notFoundComponent) {
             const view = document.createElement(componentName);
@@ -119,17 +183,15 @@ class AppWC extends HTMLElement {
             if (user) {
                 view.user = user;
             }
-            mainContainer.appendChild(view);
+            this.mainContainer.appendChild(view);
         } else {
             const nf = document.createElement('div');
             nf.style.cssText = "padding: 50px; text-align: center; color: #ff6b5a;";
             const t = document.createElement('h1');
             t.textContent = '404 | Página no encontrada';
             nf.appendChild(t);
-            mainContainer.appendChild(nf);
+            this.mainContainer.appendChild(nf);
         }
-
-        this.shadowRoot.append(linkElem, mainContainer);
     }
 }
 

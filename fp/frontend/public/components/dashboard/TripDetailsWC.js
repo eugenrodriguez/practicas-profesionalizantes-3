@@ -1,20 +1,16 @@
-// frontend/public/components/dashboard/TripDetailsWC.js
 import { api } from '../../services/api.js';
 
-// --- Service Class: Handles all API interactions ---
 class TripDetailsService {
     submitRating(tripId, passengerId, rating, comment) {
-        // Pasamos 0 como calificación por defecto cuando solo hay comentario.
         return api.submitRating(tripId, passengerId, rating, comment);
     }
 }
 
-// --- View Class: Manages DOM creation and updates, emits events ---
 class TripDetailsView {
     constructor(host) {
         this.host = host;
         this.shadowRoot = host.shadowRoot;
-        this.passengerRatingForms = new Map(); // Almacena referencias a los contenedores de los formularios de calificación
+        this.passengerRatingForms = new Map(); 
     }
 
     dispatchEvent(eventName, detail) {
@@ -97,7 +93,7 @@ class TripDetailsView {
         pasajerosTitle.textContent = 'Pasajeros';
         modalBody.appendChild(pasajerosTitle);
 
-        this.passengerRatingForms.clear(); // Limpiar referencias anteriores
+        this.passengerRatingForms.clear(); 
 
         if (trip.pasajeros && trip.pasajeros.length > 0) {
             trip.pasajeros.forEach(p => {
@@ -111,7 +107,7 @@ class TripDetailsView {
                 rateBtn.classList.add('rate-btn');
                 rateBtn.addEventListener('click', () => this.dispatchEvent('toggle-rating-form', { passenger: p, container: passengerContainer, rateBtn }));
 
-                const ratingFormWrapper = document.createElement('div'); // Wrapper for the rating form
+                const ratingFormWrapper = document.createElement('div'); 
                 passengerContainer.append(passengerP, rateBtn, ratingFormWrapper);
                 modalBody.appendChild(passengerContainer);
                 this.passengerRatingForms.set(p.id, { wrapper: ratingFormWrapper, rateBtn });
@@ -134,7 +130,6 @@ class TripDetailsView {
         return p;
     }
 
-    // Muestra u oculta el formulario de comentarios para un pasajero
     toggleRatingForm(passenger, show) {
         const ref = this.passengerRatingForms.get(passenger.id);
         if (!ref) return;
@@ -161,7 +156,7 @@ class TripDetailsView {
 
             submitBtn.addEventListener('click', () => {
                 this.dispatchEvent('submit-rating', {
-                    tripId: this.host._trip.id, // Accede al ID del viaje desde el controlador del host
+                    tripId: this.host._trip.id, 
                     passengerId: passenger.id,
                     comment: commentInput.value
                 });
@@ -173,7 +168,6 @@ class TripDetailsView {
         }
     }
 
-    // Actualiza el estado del botón de envío (cargando/normal)
     setRatingFormLoading(passengerId, isLoading) {
         const ref = this.passengerRatingForms.get(passengerId);
         if (!ref || !ref.submitBtn) return;
@@ -186,7 +180,6 @@ class TripDetailsView {
     }
 
     showRatingSuccess(passengerId, passengerName) {
-        // Muestra un mensaje de éxito después de enviar el comentario
         const ref = this.passengerRatingForms.get(passengerId);
         if (!ref) return;
 
@@ -195,21 +188,19 @@ class TripDetailsView {
         thanksMsg.textContent = `¡Gracias por tu comentario sobre ${passengerName}!`;
         thanksMsg.classList.add('success-message');
         ref.wrapper.appendChild(thanksMsg);
-        if (ref.rateBtn) ref.rateBtn.remove(); // Elimina el botón después del éxito
+        if (ref.rateBtn) ref.rateBtn.remove(); 
     }
 
     showRatingError(passengerId, message) {
-        // Muestra un error y restaura el formulario
         const ref = this.passengerRatingForms.get(passengerId);
         if (!ref) return;
 
-        alert(message); // Usa alert como en el original
-        if (ref.rateBtn) ref.rateBtn.style.display = 'block'; // Muestra el botón de nuevo en caso de error
-        this.clearContainer(ref.wrapper); // Limpia el formulario
+        alert(message); 
+        if (ref.rateBtn) ref.rateBtn.style.display = 'block'; 
+        this.clearContainer(ref.wrapper);
     }
 }
 
-// --- Controller Class: The Web Component itself ---
 class TripDetailsWC extends HTMLElement {
     constructor() {
         super();
@@ -281,7 +272,7 @@ class TripDetailsWC extends HTMLElement {
         }
 
         this.view.setRatingFormLoading(passengerId, true);
-        const res = await this.service.submitRating(tripId, passengerId, 0, comment); // Enviamos 0 como calificación por defecto
+        const res = await this.service.submitRating(tripId, passengerId, 0, comment); 
         this.view.setRatingFormLoading(passengerId, false);
 
         if (res.success) {

@@ -1,4 +1,3 @@
-// backend/controllers/ratingController.js
 import Rating from '../models/Rating.js';
 import Trip from '../models/Trip.js';
 
