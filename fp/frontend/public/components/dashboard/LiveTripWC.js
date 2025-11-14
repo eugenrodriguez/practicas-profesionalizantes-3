@@ -75,7 +75,7 @@ class LiveTripMapManager {
                     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
                     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
                 });
-             
+
                 const routingJS = document.createElement('script');
                 routingJS.src = 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js';
                 routingJS.onload = resolve;
